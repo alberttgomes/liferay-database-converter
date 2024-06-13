@@ -14,10 +14,7 @@
       retries: 10
   
   liferay:
-    build: 
-      context: ./
-      dockerfile: ./docker-compose/liferay/Dockerfile
-    image: liferay/dxp-2024.q1.1
+    image: liferay:dxp-2024.q1.12
     environment:
       - LIFERAY_JVM_OPTS=-Xms8g -Xmx8g
       - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME=com.mysql.cj.jdbc.Driver
@@ -26,6 +23,9 @@
       - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD=upgrades
       - LIFERAY_MODULE_PERIOD_FRAMEWORK_PERIOD_PROPERTIES_PERIOD_OSGI_PERIOD_CONSOLE=0.0.0.0:11311
       - LIFERAY_JPDA_ENABLED=true
+    volumes:
+      - ./docker-compose/liferay/files/:/mnt/liferay/files
+      - ./docker-compose/liferay/scripts/:/mnt/liferay/scripts
     ports:
       - "8080:8080"
       - "11311:11311"
