@@ -19,11 +19,11 @@
       dockerfile: ./docker-compose/liferay/Dockerfile
     image: liferay/dxp-2024.q1.1
     environment:
-      - LIFERAY_JVM_OPTS=-Xms3g -Xmx4g
+      - LIFERAY_JVM_OPTS=-Xms8g -Xmx8g
       - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME=com.mysql.cj.jdbc.Driver
-      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL=jdbc:mysql://database/upgrades?characterEncoding=utf8&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&serverTimezone=GMT&useFastDateParsing=false&useUnicode=true
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL=jdbc:mysql://database/upgrades?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
       - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME=root
-      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD=root
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD=upgrades
       - LIFERAY_MODULE_PERIOD_FRAMEWORK_PERIOD_PROPERTIES_PERIOD_OSGI_PERIOD_CONSOLE=0.0.0.0:11311
       - LIFERAY_JPDA_ENABLED=true
     ports:
