@@ -10,7 +10,6 @@ import com.liferay.convert.tools.util.ResultsThreadLocal;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-
         System.out.println(
                 "Converting liferay scheme types between Oracle and MySQL...");
 
@@ -28,7 +27,6 @@ public class Main {
             PrintLoggerUtil.printError(
                     "Replace fail. Try again!", null);
         }
-
     }
 
     // Necessary variables to initialize the app
