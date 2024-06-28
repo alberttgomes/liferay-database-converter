@@ -6,7 +6,7 @@ package com.liferay.convert.tools.migrate;
 public abstract class BaseReplacement {
 
     protected abstract void replacement(
-            String sourceFileName, String targetFileName, String newFileName, boolean isEnableLog)
+            String sourceFileName, String targetFileName, String newFileName)
         throws Exception;
 
     protected String getType() {

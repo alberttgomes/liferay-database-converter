@@ -4,7 +4,6 @@ import com.liferay.convert.tools.migrate.ReplacementLiferayScheme;
 import com.liferay.convert.tools.util.PrintLoggerUtil;
 import com.liferay.convert.tools.util.ResultsThreadLocal;
 
-
 /**
  * @author Albert Gomes Cabral
  */
@@ -13,12 +12,12 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         System.out.println(
-                "Converting liferay scheme types between Oracle and MySQL tools...");
+                "Converting liferay scheme types between Oracle and MySQL...");
 
         ReplacementLiferayScheme replacementLiferayScheme = new ReplacementLiferayScheme();
 
         replacementLiferayScheme.replacement(
-                _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME, true);
+                _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             PrintLoggerUtil.printInfo(
@@ -36,8 +35,8 @@ public class Main {
 
     private static final String _SOURCE_FILE_NAME = "liferay-mysql-dump.sql";
 
-    private static final String _TARGET_FILE_NAME = "bizlink_74_dump_25_04.sql";
+    private static final String _TARGET_FILE_NAME = "customer_74_dump.sql";
 
-    private static final String _NEW_FILE_NAME = "bizlink_74_new_dump_09_05.sql";
+    private static final String _NEW_FILE_NAME = "customer_74_new_dump.sql";
 
 }

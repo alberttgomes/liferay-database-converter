@@ -30,7 +30,7 @@ public class ReplacementLiferaySchemeTest extends ReplacementLiferayScheme {
 
         replacementLiferayScheme.replacement(
                 _SOURCE_LIFERAY_SCHEME_SQL, _TARGET_LIFERAY_SCHEME_SQL,
-                _NEW_CUSTOMER_SCHEME_OUT_PUT_SQL, false);
+                _NEW_CUSTOMER_SCHEME_OUT_PUT_SQL);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             List<Map<String, String>> contentList =
