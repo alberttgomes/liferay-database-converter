@@ -24,7 +24,7 @@ public class PrintLoggerUtil {
     public static void printReplacement(
             String oldContent, String newContent, Pattern pattern) {
 
-        System.out.println("Apply pattern " + pattern.pattern());
+        System.out.println("Applying pattern " + pattern.pattern());
 
         System.out.println(
                 "Replace\n" + _LIGHT_BLUE + oldContent + _RESET +

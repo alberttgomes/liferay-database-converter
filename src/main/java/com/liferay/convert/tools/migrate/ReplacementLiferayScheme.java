@@ -19,10 +19,9 @@ public class ReplacementLiferayScheme extends BaseReplacement {
     public void replacement(
             String sourceFileName, String targetFileName, String newFileName)
         throws Exception {
-
         try {
-            List<Map<String, String>> contentMapList =
-                    _getContentsFromFiles(sourceFileName, targetFileName);
+            List<Map<String, String>> contentMapList = _getContentFromFile(
+                    sourceFileName, targetFileName);
 
             if (contentMapList != null && contentMapList.size() == 2) {
 
@@ -44,7 +43,6 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                     // Method to create output file and add on thread to be got in another class.
 
                     _createSQLFileOutput(newFileName, targetContent);
-
                 }
                 else {
                     throw new ReplacementException(
@@ -56,47 +54,40 @@ public class ReplacementLiferayScheme extends BaseReplacement {
             }
         }
         catch (Exception exception) {
-            throw new Exception(
-                    "Unable to replace contents ", exception);
+            throw new Exception("Unable to replace contents ", exception);
         }
-
     }
 
     protected String replaceContextPattern(
             String sourceContent, String targetContent, Pattern pattern)
         throws ReplacementException {
-
         try {
-
             Matcher matcherTarget = pattern.matcher(targetContent);
 
             while (matcherTarget.find()) {
-
                 Matcher matcherSource = pattern.matcher(sourceContent);
 
                 while (matcherSource.find()) {
-
                     String patternDefinition = pattern.toString();
 
                     if (patternDefinition.contains(
                             "(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))")) {
 
-                        if (matcherTarget.group(2).equalsIgnoreCase(matcherSource.group(2))) {
+                        if (matcherTarget.group(2).equalsIgnoreCase(
+                                matcherSource.group(2))) {
 
-                            String camelCaseName = matcherSource.group(2);
+                            String name = matcherSource.group(2);
                             String groupId = matcherTarget.group(4);
 
-                            String camelCaseConcatGroupId =
-                                    camelCaseName + matcherSource.group(3) + groupId;
+                            String concatGroupId = name + matcherSource.group(3) + groupId;
 
                             // Replace name concat group id
 
                             targetContent = targetContent.replace(
-                                    matcherTarget.group(1), camelCaseConcatGroupId);
+                                    matcherTarget.group(1), concatGroupId);
 
                             PrintLoggerUtil.printReplacement(
-                                    matcherTarget.group(1), camelCaseConcatGroupId,
-                                    pattern);
+                                    matcherTarget.group(1), concatGroupId, pattern);
 
                             // Replace table definitions
 
@@ -109,9 +100,10 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                         }
                     }
                     else {
-                        if (matcherTarget.group(1).equalsIgnoreCase(matcherSource.group(1))) {
+                        if (matcherTarget.group(1).equalsIgnoreCase(
+                                matcherSource.group(1))) {
 
-                            // Replace all table name
+                            // Replace all occurrences to gave table name
 
                             targetContent = targetContent.replace(
                                     matcherTarget.group(1), matcherSource.group(1));
@@ -142,9 +134,8 @@ public class ReplacementLiferayScheme extends BaseReplacement {
         }
         catch (Exception exception) {
             throw new ReplacementException(
-                    "Unable to process " + pattern.pattern(), exception);
+                    "Cannot replacement content ", exception);
         }
-
     }
 
     private Map<String, String> _buildMapItem(String key, String value) {
@@ -199,42 +190,43 @@ public class ReplacementLiferayScheme extends BaseReplacement {
     }
 
     private String _formatColumns(
-            Set<String> columnsSource, String columnsContentTarget, String contentSource) {
+            Set<String> columnsSource, String columnContentTarget, String columnContentSource) {
 
         if (columnsSource == null || columnsSource.isEmpty()) {
             return null;
         }
 
-        Pattern pattern = Pattern.compile(
-                "(`\\w+`)\\s(\\w+\\(?.+),?");
+        Pattern pattern = Pattern.compile("(`\\w+`)\\s(\\w+\\(?.+),?");
 
-        Matcher matcher = pattern.matcher(columnsContentTarget);
+        Matcher matcher = pattern.matcher(columnContentTarget);
 
         while (matcher.find()) {
             for (String colum : columnsSource) {
                 Matcher matcher1 = _COLUMN_NAME_PATTERN.matcher(colum);
 
                 while (matcher1.find()) {
-
                     if (matcher.group(1).equalsIgnoreCase(
                             matcher1.group(1))) {
 
-                        columnsContentTarget = columnsContentTarget.replace(
+                        columnContentTarget = columnContentTarget.replace(
                                 matcher.group(), colum + ",");
                     }
                 }
             }
         }
 
-        return _getConstraints(columnsContentTarget, contentSource);
+        return _getConstraints(columnContentTarget, columnContentSource);
     }
 
-    private String _getColumns(
-            String sourceColumns, String targetColumns) {
-
+    private String _getColumns(String sourceColumns, String targetColumns) {
         Set<String> columnsTargetSet = _getColumnsSet(targetColumns, false);
-        Set<String> sourceColumnsSet = _getColumnsSet(sourceColumns, false);
-        Set<String> onlyColumnsNameSourceSet = _getColumnsSet(sourceColumns, true);
+        Set<String> columnsSourceSet = _getColumnsSet(sourceColumns, false);
+
+        // Getting name columns from source data
+
+        Set<String> onlyColumnsName = _getColumnsSet(sourceColumns, true);
+
+        // Check if exist custom columns to keeping
 
         columnsTargetSet.forEach(
                 (column) -> {
@@ -243,38 +235,38 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                     if (matcher1.find()) {
                         String columnTarget = matcher1.group(1);
 
-                        if (!onlyColumnsNameSourceSet.contains(columnTarget)) {
-                            sourceColumnsSet.add(column);
-                        };
+                        if (!onlyColumnsName.contains(columnTarget)) {
+                            columnsSourceSet.add(column);
+                        }
                     }
                 }
         );
 
-        return _formatColumns(sourceColumnsSet, targetColumns, sourceColumns);
-
+        return _formatColumns(columnsSourceSet, targetColumns, sourceColumns);
     }
 
-    private Set<String> _getColumnsSet(String fields, boolean onlyColumnName) {
-        Set<String> fieldsSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    private Set<String> _getColumnsSet(String contentField, boolean onlyColumnName) {
+        Set<String> fields = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-        for (String column : fields.split(",\\n")) {
+        for (String column : contentField.split(",\\n")) {
             Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
 
             if (matcher.find()) {
                 if (onlyColumnName) {
-                    fieldsSet.add(matcher.group(1));
+                    fields.add(matcher.group(1));
                 }
                 else {
-                    fieldsSet.add(column.trim());
+                    fields.add(column.trim());
                 }
             }
         }
 
-        return fieldsSet;
+        return fields;
     }
 
     private String _getConstraints(String columns, String constraints) {
-        Pattern pattern = Pattern.compile("PRIMARY\\s+KEY\\s+(.+)(\\s*.*)+");
+        Pattern pattern = Pattern.compile(
+                "PRIMARY\\s+KEY\\s+(.+)(\\s*.*)+");
 
         Matcher matcher = pattern.matcher(constraints);
 
@@ -290,9 +282,8 @@ public class ReplacementLiferayScheme extends BaseReplacement {
         return sb.toString();
     }
 
-    private List<Map<String, String>> _getContentsFromFiles(
+    private List<Map<String, String>> _getContentFromFile(
             String sourceFileName, String targetFileName) throws SQLFilesException {
-
         try {
             if (!sourceFileName.endsWith(".sql") && targetFileName.endsWith(".sql")) {
                 throw new SQLFilesException("Extension file must be .sql");
