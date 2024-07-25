@@ -34,7 +34,7 @@ public class ReplacementLiferaySchemeTest extends ReplacementLiferayScheme {
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             List<Map<String, String>> contentList =
-                    _getContentsFromFiles(
+                    _getContentFromFile(
                             _NEW_CUSTOMER_SCHEME_OUT_PUT_SQL,
                             _EXPECTED_CUSTOMER_SCHEME_OUT_PUT_SQL);
 
@@ -47,7 +47,7 @@ public class ReplacementLiferaySchemeTest extends ReplacementLiferayScheme {
 
     }
 
-    private List<Map<String, String>> _getContentsFromFiles(
+    private List<Map<String, String>> _getContentFromFile(
             String newFileOutput, String expectedFileOutput) {
         return null;
 
