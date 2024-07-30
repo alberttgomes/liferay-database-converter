@@ -1,4 +1,4 @@
-package com.liferay.convert.tools.util;
+package com.upgrades.tool.util;
 
 /**
  * @author Albert Gomes Cabral

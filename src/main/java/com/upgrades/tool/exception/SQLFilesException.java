@@ -1,4 +1,4 @@
-package com.liferay.convert.tools.exception;
+package com.upgrades.tool.exception;
 
 /**
  * @author Albert Gomes Cabral

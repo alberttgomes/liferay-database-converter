@@ -1,9 +1,9 @@
-package com.liferay.convert.tools;
+package com.upgrades.tool;
 
-import com.liferay.convert.tools.migrate.ReplacementLiferayScheme;
-import com.liferay.convert.tools.util.PrintLoggerUtil;
-import com.liferay.convert.tools.util.ResultsThreadLocal;
-
+import com.upgrades.tool.convert.ReplacementLiferayScheme;
+import com.upgrades.tool.initialize.Initialize;
+import com.upgrades.tool.util.PrintLoggerUtil;
+import com.upgrades.tool.util.ResultsThreadLocal;
 
 /**
  * @author Albert Gomes Cabral
@@ -15,7 +15,10 @@ public class Main {
         System.out.println(
                 "Converting liferay scheme types between Oracle and MySQL tools...");
 
-        ReplacementLiferayScheme replacementLiferayScheme = new ReplacementLiferayScheme();
+        Initialize initialize = new Initialize();
+
+        ReplacementLiferayScheme replacementLiferayScheme =
+                initialize.getReplacementType(_DATABASE_TYPE);
 
         replacementLiferayScheme.replacement(
                 _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME);
@@ -27,12 +30,14 @@ public class Main {
         }
         else {
             PrintLoggerUtil.printError(
-                    "Replace fail. Try again!", null);
+                    "Replacement fail. Try again!");
         }
 
     }
 
-    // Necessary variables to initialize the app
+    // Necessary variables to getReplacementType the app
+
+    private static final String _DATABASE_TYPE = "mysql";
 
     private static final String _SOURCE_FILE_NAME = "liferay-mysql-dump.sql";
 
