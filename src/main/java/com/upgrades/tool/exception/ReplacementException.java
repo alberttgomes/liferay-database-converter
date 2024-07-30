@@ -1,9 +1,13 @@
-package com.liferay.convert.tools.exception;
+package com.upgrades.tool.exception;
 
 /**
  * @author Albert Gomes Cabral
  */
 public class ReplacementException extends Exception {
+
+    public ReplacementException(Exception exception) {
+        super(exception);
+    }
 
     public ReplacementException(String message) {
         super(message);

@@ -1,9 +1,9 @@
-package com.liferay.convert.tools.migrate;
+package com.upgrades.tool.convert;
 
-import com.liferay.convert.tools.exception.ReplacementException;
-import com.liferay.convert.tools.exception.SQLFilesException;
-import com.liferay.convert.tools.util.PrintLoggerUtil;
-import com.liferay.convert.tools.util.ResultsThreadLocal;
+import com.upgrades.tool.exception.ReplacementException;
+import com.upgrades.tool.exception.SQLFilesException;
+import com.upgrades.tool.util.PrintLoggerUtil;
+import com.upgrades.tool.util.ResultsThreadLocal;
 
 import java.io.*;
 import java.util.*;
@@ -13,13 +13,35 @@ import java.util.regex.Pattern;
 /**
  * @author Albert Gomes Cabral
  */
-public class ReplacementLiferayScheme extends BaseReplacement {
+public abstract class BaseReplacement {
 
-    @Override
-    public void replacement(
+    protected abstract Pattern[] getContextPattern();
+
+    protected abstract String getType();
+
+    // Loads files put on resources directory and getting the replacementContextPatter method.
+    // Also, getting the _createFileResult method.
+
+    /**
+     *
+     * @param sourceFileName file's name to the source (Source Dump)
+     * @param targetFileName  file's name to the target (Target Dump)
+     * @param newFileName file's name to the file output
+     * @throws Exception throws exception if some error occur
+     */
+    protected void replacement(
             String sourceFileName, String targetFileName, String newFileName)
         throws Exception {
         try {
+            if (sourceFileName == null || sourceFileName.isBlank()
+                    || targetFileName == null || targetFileName.isBlank()
+                    || newFileName == null || newFileName.isBlank()) {
+
+                PrintLoggerUtil.printError("Invalid params");
+
+                return;
+            }
+
             List<Map<String, String>> contentMapList = _getContentFromFile(
                     sourceFileName, targetFileName);
 
@@ -28,21 +50,21 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                 String sourceContent = contentMapList.get(0).get("source.key");
                 String targetContent = contentMapList.get(1).get("target.key");
 
+                String firstContentTarget = targetContent;
+
                 if (sourceContent != null && targetContent != null) {
-
-                    Pattern[] patternsArray = new Pattern[] {
-                            _CREATE_TABLE_GROUP_ID_FIELD_PATTERN,
-                            _CREATE_TABLE_PATTERN,
-                    };
-
-                    for (Pattern pattern : patternsArray) {
-                        targetContent = replaceContextPattern(
-                                sourceContent, targetContent, pattern);
+                    for (Pattern pattern : getContextPattern()) {
+                        targetContent = replacementContextPattern(
+                                sourceContent, targetContent, pattern, sourceFileName);
                     }
 
-                    // Method to create output file and add on thread to be got in another class.
+                    if (firstContentTarget.equals(targetContent)) {
+                        throw new ReplacementException("No exchanges were recorded");
+                    }
 
-                    _createSQLFileOutput(newFileName, targetContent);
+                    // Create output file results
+
+                    _createFileResult(newFileName, targetContent);
                 }
                 else {
                     throw new ReplacementException(
@@ -58,8 +80,8 @@ public class ReplacementLiferayScheme extends BaseReplacement {
         }
     }
 
-    protected String replaceContextPattern(
-            String sourceContent, String targetContent, Pattern pattern)
+    protected String replacementContextPattern(
+            String sourceContent, String targetContent, Pattern pattern, String sourceFileName)
         throws ReplacementException {
         try {
             Matcher matcherTarget = pattern.matcher(targetContent);
@@ -70,18 +92,14 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                 while (matcherSource.find()) {
                     String patternDefinition = pattern.toString();
 
-                    if (patternDefinition.contains(
-                            "(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))")) {
+                    if (patternDefinition.contains("(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))")) {
 
-                        if (matcherTarget.group(2).equalsIgnoreCase(
-                                matcherSource.group(2))) {
-
+                        if (matcherTarget.group(2).equalsIgnoreCase(matcherSource.group(2))) {
                             String name = matcherSource.group(2);
                             String groupId = matcherTarget.group(4);
-
                             String concatGroupId = name + matcherSource.group(3) + groupId;
 
-                            // Replace name concat group id
+                            // Replace table name concat with group id
 
                             targetContent = targetContent.replace(
                                     matcherTarget.group(1), concatGroupId);
@@ -95,22 +113,19 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                                     matcherTarget.group(5), matcherSource.group(5));
 
                             PrintLoggerUtil.printReplacement(
-                                    matcherTarget.group(5), matcherSource.group(5),
-                                    pattern);
+                                    matcherTarget.group(5), matcherSource.group(5), pattern);
                         }
                     }
                     else {
-                        if (matcherTarget.group(1).equalsIgnoreCase(
-                                matcherSource.group(1))) {
+                        if (matcherTarget.group(1).equalsIgnoreCase(matcherSource.group(1))) {
 
-                            // Replace all occurrences to gave table name
+                            // Replace table name
 
                             targetContent = targetContent.replace(
                                     matcherTarget.group(1), matcherSource.group(1));
 
                             PrintLoggerUtil.printReplacement(
-                                    matcherTarget.group(1), matcherSource.group(1),
-                                    pattern);
+                                    matcherTarget.group(1), matcherSource.group(1), pattern);
 
                             // Replace table tableDefinitions
 
@@ -134,7 +149,8 @@ public class ReplacementLiferayScheme extends BaseReplacement {
         }
         catch (Exception exception) {
             throw new ReplacementException(
-                    "Cannot replacement content ", exception);
+                    "Cannot replacement content from the file " + sourceFileName,
+                        exception);
         }
     }
 
@@ -146,7 +162,7 @@ public class ReplacementLiferayScheme extends BaseReplacement {
         return itemMap;
     }
 
-    private void _createSQLFileOutput(
+    private void _createFileResult(
             String newFileName, String content) throws IOException {
 
         String resourceDirectory = System.getProperty("user.dir") +
@@ -317,8 +333,8 @@ public class ReplacementLiferayScheme extends BaseReplacement {
                         source.isBlank() && target.isBlank()) {
 
                     PrintLoggerUtil.printError(
-                            "Cannot convert input stream to string!" +
-                                    " Invalid input file.", null);
+                            "Cannot convert input stream to string! " +
+                                    "Invalid input file.");
 
                     return null;
                 }
@@ -356,16 +372,6 @@ public class ReplacementLiferayScheme extends BaseReplacement {
 
     private static final Pattern _COLUMN_NAME_PATTERN = Pattern.compile(
             "(`[A-z]+_?`)\\s+[^,]+(?:,|$)");
-
-    private static final Pattern _CREATE_TABLE_PATTERN = Pattern.compile(
-            "CREATE\\s+TABLE\\s+(`[A-z]+_?`)\\s*\\(((\\s*.*,)+(\\s*.*))\\s*\\)\\s*" +
-                    "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci?;");
-
-    private static final Pattern _CREATE_TABLE_GROUP_ID_FIELD_PATTERN = Pattern.compile(
-            "CREATE\\s+TABLE\\s+`(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))`\\s*(\\((?:[^)(]+" +
-                    "|\\([^)(]*\\))*\\))\\s*ENGINE=InnoDB\\s*DEFAULT\\s*CHARSET=utf8mb4" +
-                    "\\s*COLLATE=utf8mb4_unicode_ci;");
-
 
     // Utilities variables
 

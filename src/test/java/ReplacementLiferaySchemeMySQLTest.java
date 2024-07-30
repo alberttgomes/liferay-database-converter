@@ -1,6 +1,6 @@
-import com.liferay.convert.tools.migrate.ReplacementLiferayScheme;
-import com.liferay.convert.tools.util.PrintLoggerUtil;
-import com.liferay.convert.tools.util.ResultsThreadLocal;
+import com.upgrades.tool.convert.ReplacementLiferaySchemeMySQL;
+import com.upgrades.tool.util.PrintLoggerUtil;
+import com.upgrades.tool.util.ResultsThreadLocal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,22 +13,22 @@ import java.util.Map;
  * @author Albert Gomes Cabral
  */
 @Testable
-public class ReplacementLiferaySchemeTest extends ReplacementLiferayScheme {
+public class ReplacementLiferaySchemeMySQLTest extends ReplacementLiferaySchemeMySQL {
 
     @BeforeAll
     public static void loadTemplates() {
        PrintLoggerUtil.printInfo(
               "Initializing tests to " +
-                       ReplacementLiferayScheme.class.getName());
+                       ReplacementLiferaySchemeMySQL.class.getName());
     }
 
     @Test
     public void testLoadingFilesCase() throws Exception {
 
-        ReplacementLiferayScheme replacementLiferayScheme =
-                new ReplacementLiferayScheme();
+        ReplacementLiferaySchemeMySQL replacementLiferaySchemeMySQL =
+                new ReplacementLiferaySchemeMySQL();
 
-        replacementLiferayScheme.replacement(
+        replacementLiferaySchemeMySQL.replacement(
                 _SOURCE_LIFERAY_SCHEME_SQL, _TARGET_LIFERAY_SCHEME_SQL,
                 _NEW_CUSTOMER_SCHEME_OUT_PUT_SQL);
 
