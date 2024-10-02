@@ -3,6 +3,7 @@
 ### Steps
 
 1. Download your bundle version from `https://customer.liferay.com/en_US/downloads`
+    > The bundle version must be the same as your project
 
 2. Create a MySQL Docker image, using the following command:
     ```
