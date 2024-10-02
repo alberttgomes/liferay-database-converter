@@ -1,4 +1,4 @@
-# How to use this project to replace Liferay's scheme types.
+# How to use tool to fix Pentaho issues
 
 ### Steps
 
@@ -47,4 +47,4 @@
 8. Run the project
 
 ### Note
-> This project will assist just the replacing the types. You will need to use other tools to migrate different database types, like Pentaho, for example.
+> You will need to use another tool to fix the column constraints issue when using the Pentaho tool.
