@@ -47,4 +47,4 @@
 8. Run the project
 
 ### Note
-> You will need to use another tool to fix the column constraints issue when using the Pentaho tool.
+> Tool to fix the column constraints issue when using the Pentaho tool.
