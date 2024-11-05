@@ -1,5 +1,6 @@
 package com.upgrades.tool.convert;
 
+import com.upgrades.tool.constants.SupportedTypes;
 import com.upgrades.tool.exception.ReplacementException;
 import com.upgrades.tool.exception.SQLFilesException;
 import com.upgrades.tool.util.PrintLoggerUtil;
@@ -19,38 +20,25 @@ public abstract class BaseReplacement {
 
     protected abstract String getType();
 
-    // Loads files put on resources directory and getting the replacementContextPatter method.
-    // Also, getting the _createFileResult method.
-
-    /**
-     *
-     * @param sourceFileName file's name to the source (Source Dump)
-     * @param targetFileName  file's name to the target (Target Dump)
-     * @param newFileName file's name to the file output
-     * @throws Exception throws exception if some error occur
-     */
     protected void replacement(
             String sourceFileName, String targetFileName, String newFileName)
         throws Exception {
-        try {
-            if (sourceFileName == null || sourceFileName.isBlank()
-                    || targetFileName == null || targetFileName.isBlank()
-                    || newFileName == null || newFileName.isBlank()) {
 
+        try {
+            if (Objects.isNull(sourceFileName) && Objects.isNull(targetFileName)) {
                 PrintLoggerUtil.printError("Invalid params");
 
                 return;
             }
 
-            List<Map<String, String>> contentMapList = _getContentFromFile(
-                    sourceFileName, targetFileName);
+            List<Map<String, String>> contentMapList =
+                    _getContentResourceDirectory(sourceFileName, targetFileName);
 
             if (contentMapList != null && contentMapList.size() == 2) {
-
                 String sourceContent = contentMapList.get(0).get("source.key");
                 String targetContent = contentMapList.get(1).get("target.key");
 
-                String firstContentTarget = targetContent;
+                String originalContentTarget = targetContent;
 
                 if (sourceContent != null && targetContent != null) {
                     for (Pattern pattern : getContextPattern()) {
@@ -58,11 +46,10 @@ public abstract class BaseReplacement {
                                 sourceContent, targetContent, pattern, sourceFileName);
                     }
 
-                    if (firstContentTarget.equals(targetContent)) {
-                        throw new ReplacementException("No exchanges were recorded");
+                    if (originalContentTarget.equals(targetContent)) {
+                        throw new ReplacementException(
+                                "No exchanges were recorded");
                     }
-
-                    // Create output file results
 
                     _createFileResult(newFileName, targetContent);
                 }
@@ -76,13 +63,15 @@ public abstract class BaseReplacement {
             }
         }
         catch (Exception exception) {
-            throw new Exception("Unable to replace contents ", exception);
+            throw new Exception(exception.getCause());
         }
     }
 
     protected String replacementContextPattern(
-            String sourceContent, String targetContent, Pattern pattern, String sourceFileName)
+            String sourceContent, String targetContent, Pattern pattern,
+            String sourceFileName)
         throws ReplacementException {
+
         try {
             Matcher matcherTarget = pattern.matcher(targetContent);
 
@@ -91,9 +80,9 @@ public abstract class BaseReplacement {
 
                 while (matcherSource.find()) {
                     String patternDefinition = pattern.toString();
+                    String specialCharacters = "(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))";
 
-                    if (patternDefinition.contains("(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))")) {
-
+                    if (patternDefinition.contains(specialCharacters)) {
                         if (matcherTarget.group(2).equalsIgnoreCase(matcherSource.group(2))) {
                             String name = matcherSource.group(2);
                             String groupId = matcherTarget.group(4);
@@ -118,7 +107,6 @@ public abstract class BaseReplacement {
                     }
                     else {
                         if (matcherTarget.group(1).equalsIgnoreCase(matcherSource.group(1))) {
-
                             // Replace table name
 
                             targetContent = targetContent.replace(
@@ -132,14 +120,16 @@ public abstract class BaseReplacement {
                             String definitionsSource = matcherSource.group(2);
                             String definitionsTarget = matcherTarget.group(2);
 
-                            String tableDefinitions = _getColumns(
+                            // Replacing the columns and constraints
+
+                            String fixedDefinitions = _getColumns(
                                     definitionsSource, definitionsTarget);
 
                             targetContent = targetContent.replace(
-                                    definitionsTarget, tableDefinitions);
+                                    definitionsTarget, fixedDefinitions);
 
                             PrintLoggerUtil.printReplacement(
-                                    definitionsTarget, tableDefinitions, pattern);
+                                    definitionsTarget, fixedDefinitions, pattern);
                         }
                     }
                 }
@@ -149,8 +139,8 @@ public abstract class BaseReplacement {
         }
         catch (Exception exception) {
             throw new ReplacementException(
-                    "Cannot replacement content from the file " + sourceFileName,
-                        exception);
+                    "Cannot replacement content from the file %s"
+                            .formatted(sourceFileName), exception);
         }
     }
 
@@ -206,50 +196,52 @@ public abstract class BaseReplacement {
     }
 
     private String _formatColumns(
-            Set<String> columnsSource, String columnContentTarget, String columnContentSource) {
+            Set<String> columnsSourceSet, String columnsTarget, String columnsSource)
+        throws ReplacementException {
 
-        if (columnsSource == null || columnsSource.isEmpty()) {
+        if (!Objects.nonNull(columnsSourceSet)) {
             return null;
         }
 
         Pattern pattern = Pattern.compile("(`\\w+`)\\s(\\w+\\(?.+),?");
 
-        Matcher matcher = pattern.matcher(columnContentTarget);
+        Matcher matcher = pattern.matcher(columnsTarget);
 
         while (matcher.find()) {
-            for (String colum : columnsSource) {
+            for (String colum : columnsSourceSet) {
                 Matcher matcher1 = _COLUMN_NAME_PATTERN.matcher(colum);
 
                 while (matcher1.find()) {
                     if (matcher.group(1).equalsIgnoreCase(
                             matcher1.group(1))) {
 
-                        columnContentTarget = columnContentTarget.replace(
+                        columnsTarget = columnsTarget.replace(
                                 matcher.group(), colum + ",");
                     }
                 }
             }
         }
 
-        return _getConstraints(columnContentTarget, columnContentSource);
+        return _getConstraints(columnsTarget, columnsSource);
     }
 
-    private String _getColumns(String sourceColumns, String targetColumns) {
+    private String _getColumns(
+            String sourceColumns, String targetColumns) throws ReplacementException {
         Set<String> columnsTargetSet = _getColumnsSet(targetColumns, false);
         Set<String> columnsSourceSet = _getColumnsSet(sourceColumns, false);
 
-        // Getting name columns from source data
+        // Getting columns name from source data
 
         Set<String> onlyColumnsName = _getColumnsSet(sourceColumns, true);
 
-        // Check if exist custom columns to keeping
+        // Checking if exist custom columns
 
         columnsTargetSet.forEach(
                 (column) -> {
-                    Matcher matcher1 = _COLUMN_NAME_PATTERN.matcher(column);
+                    Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
 
-                    if (matcher1.find()) {
-                        String columnTarget = matcher1.group(1);
+                    if (matcher.find()) {
+                        String columnTarget = matcher.group(1);
 
                         if (!onlyColumnsName.contains(columnTarget)) {
                             columnsSourceSet.add(column);
@@ -272,7 +264,8 @@ public abstract class BaseReplacement {
                     fields.add(matcher.group(1));
                 }
                 else {
-                    fields.add(column.trim());
+                    String trimmedColumn = column.trim();
+                    fields.add(trimmedColumn);
                 }
             }
         }
@@ -280,26 +273,42 @@ public abstract class BaseReplacement {
         return fields;
     }
 
-    private String _getConstraints(String columns, String constraints) {
-        Pattern pattern = Pattern.compile(
-                "PRIMARY\\s+KEY\\s+(.+)(\\s*.*)+");
+    private String _getConstraints(
+            String columns, String constraints) throws ReplacementException {
 
-        Matcher matcher = pattern.matcher(constraints);
+        try {
+            String type = getType();
 
-        StringBuilder sb = new StringBuilder();
+            if (type.equals(SupportedTypes.MYSQL)) {
+                Pattern pattern = Pattern.compile(
+                        "PRIMARY\\s+KEY\\s+(.+)(\\s*.*)+");
+                Matcher matcher = pattern.matcher(constraints);
 
-        if (matcher.find()) {
-            sb.append(columns);
-            sb.append("\n");
-            sb.append("  ");
-            sb.append(matcher.group());
+                StringBuilder sb = new StringBuilder();
+                sb.append(columns);
+                sb.append("\n");
+                sb.append("  ");
+                sb.append(matcher.group());
+
+                return toString();
+            }
+            else if (type.equals(SupportedTypes.POSTGRES)) {
+                return "WIP";
+            }
+            else {
+                throw new ReplacementException(
+                        "No supported database type %s".formatted(type));
+            }
+        }
+        catch (ReplacementException replacementException) {
+            throw new ReplacementException(replacementException);
         }
 
-        return sb.toString();
     }
 
-    private List<Map<String, String>> _getContentFromFile(
+    private List<Map<String, String>> _getContentResourceDirectory(
             String sourceFileName, String targetFileName) throws SQLFilesException {
+
         try {
             if (!sourceFileName.endsWith(".sql") && targetFileName.endsWith(".sql")) {
                 throw new SQLFilesException("Extension file must be .sql");
@@ -348,7 +357,7 @@ public abstract class BaseReplacement {
             }
         }
         catch (Exception exception) {
-            throw new SQLFilesException("Unable to load files ", exception);
+            throw new SQLFilesException(exception.getMessage());
         }
 
     }
@@ -366,6 +375,10 @@ public abstract class BaseReplacement {
 
             return stringBuilder.toString();
         }
+    }
+
+    private String _removeLastComma(String content) {
+        return content.replace(",", "");
     }
 
     // Patterns variables

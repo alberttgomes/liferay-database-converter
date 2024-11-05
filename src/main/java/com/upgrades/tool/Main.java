@@ -12,13 +12,10 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        System.out.println(
-                "Converting liferay scheme types between Oracle and MySQL tools...");
-
-        Initialize initialize = new Initialize();
+        System.out.println("Initializing App...");
 
         ReplacementLiferayScheme replacementLiferayScheme =
-                initialize.getReplacementType(_DATABASE_TYPE);
+                Initialize.getReplacementType(_DATABASE_TYPE);
 
         replacementLiferayScheme.replacement(
                 _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME);

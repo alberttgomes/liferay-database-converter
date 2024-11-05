@@ -6,6 +6,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.annotation.Testable;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,13 +46,27 @@ public class ReplacementLiferaySchemeMySQLTest extends ReplacementLiferaySchemeM
         }
         else {
              PrintLoggerUtil.printError(
-                     "test testLoadingFilesCase fail", null);
+                     "test testLoadingFilesCase fail");
         }
 
     }
 
     private List<Map<String, String>> _getContentFromFile(
-            String newFileOutput, String expectedFileOutput) {
+            String newFileOutput, String expectedFileOutput) throws IOException {
+
+        Thread thread = Thread.currentThread();
+
+        ClassLoader classLoader = thread.getContextClassLoader();
+
+        Enumeration<URL> urlEnumeration =
+                classLoader.getResources("/resources");
+
+        if (urlEnumeration.hasMoreElements()) {
+            URL url = urlEnumeration.nextElement();
+
+            String content = url.getContent().toString();
+        }
+
         return null;
 
     }

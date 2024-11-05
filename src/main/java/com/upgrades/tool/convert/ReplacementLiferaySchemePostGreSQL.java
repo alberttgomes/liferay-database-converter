@@ -10,7 +10,15 @@ public class ReplacementLiferaySchemePostGreSQL extends BaseReplacement
 
     @Override
     protected Pattern[] getContextPattern() {
-        return new Pattern[0];
+        return new Pattern[] {
+                Pattern.compile(
+                        "CREATE\\s+TABLE\\s+public\\.([A-z]+_?)\\s*\\((\\s*.*)+(\\s*.*)"
+                ),
+                Pattern.compile(
+                        "CREATE\\s+TABLE\\s+public\\.(([A-Za-z]+)(_[a-zA-Z]+_)" +
+                                "([0-9]+))\\s*\\((\\s*.*)+(\\s*.*)"
+                )
+        };
     }
 
     @Override

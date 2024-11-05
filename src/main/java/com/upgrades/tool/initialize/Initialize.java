@@ -1,40 +1,42 @@
 package com.upgrades.tool.initialize;
 
+import com.upgrades.tool.constants.SupportedTypes;
 import com.upgrades.tool.convert.ReplacementLiferayScheme;
 import com.upgrades.tool.convert.ReplacementLiferaySchemeMySQL;
 import com.upgrades.tool.convert.ReplacementLiferaySchemePostGreSQL;
-import com.upgrades.tool.exception.ReplacementException;
+import com.upgrades.tool.exception.DatabaseTypeException;
 
 /**
  * @author Albert Gomes Cabral
  */
 public class Initialize {
 
-    public ReplacementLiferayScheme getReplacementType(
-            String databaseType) throws ReplacementException {
+    public static ReplacementLiferayScheme getReplacementType(String databaseType)
+        throws DatabaseTypeException {
+
         try {
             if (databaseType == null || databaseType.isEmpty()) {
-                throw new ReplacementException(
-                        "Database type cannot be null or empty." +
-                                " Please provide a valid database type.");
+                throw new DatabaseTypeException(
+                        "Database type cannot be null or empty");
             }
 
-            // check database's type
-
-            if (databaseType.equals("mysql")) {
+            if (databaseType.equals(SupportedTypes.MYSQL)) {
                 return new ReplacementLiferaySchemeMySQL();
             }
-            else if (databaseType.equals("postgresql")) {
+            else if (databaseType.equals(SupportedTypes.POSTGRES)) {
                 return new ReplacementLiferaySchemePostGreSQL();
             }
             else {
-                throw new ReplacementException(
-                        "No database type supported: " + databaseType);
+                throw new DatabaseTypeException(
+                        "No database type supported %s"
+                                .formatted(databaseType));
             }
         }
-        catch (ReplacementException replacementException) {
-            throw new ReplacementException(replacementException);
+        catch (DatabaseTypeException databaseTypeException) {
+            throw new DatabaseTypeException(
+                    databaseTypeException.getMessage());
         }
+
     }
 
 }
