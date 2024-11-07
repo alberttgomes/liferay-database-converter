@@ -7,13 +7,13 @@ import java.util.regex.Pattern;
 /**
  * @author Albett Gomes Cabral
  */
-public class PrintLoggerUtil {
+public class Print {
 
-    public static void printInfo(String word) {
+    public static void info(String word) {
         _print(_GREEN, word);
     }
 
-    public static void printError(String word, String ...cause) {
+    public static void error(String word, String ...cause) {
         if (cause == null) {
             _print(_RED, word);
         }
@@ -22,7 +22,7 @@ public class PrintLoggerUtil {
         }
     }
 
-    public static void printReplacement(
+    public static void replacement(
             String oldContent, String newContent, Pattern pattern) {
 
         System.out.println("Applying pattern " + pattern.pattern());
@@ -34,7 +34,7 @@ public class PrintLoggerUtil {
 
     }
 
-    public static void printWarning(String word, String cause) {
+    public static void warn(String word, String cause) {
         if (cause == null) {
             _print(_YELLOW, word);
         }
