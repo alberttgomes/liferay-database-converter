@@ -1,5 +1,5 @@
-import com.upgrades.tool.convert.ReplacementLiferaySchemeMySQL;
-import com.upgrades.tool.util.PrintLoggerUtil;
+import com.upgrades.tool.convert.SchemeMySQLConverter;
+import com.upgrades.tool.util.Print;
 import com.upgrades.tool.util.ResultsThreadLocal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,22 +13,22 @@ import java.util.Map;
  * @author Albert Gomes Cabral
  */
 @Testable
-public class ReplacementLiferaySchemeMySQLTest extends ReplacementLiferaySchemeMySQL {
+public class SchemeMySQLConverterTest extends SchemeMySQLConverter {
 
     @BeforeAll
     public static void loadTemplates() {
-       PrintLoggerUtil.printInfo(
+       Print.info(
               "Initializing tests to " +
-                       ReplacementLiferaySchemeMySQL.class.getName());
+                       SchemeMySQLConverter.class.getName());
     }
 
     @Test
     public void testLoadingFilesCase() throws Exception {
 
-        ReplacementLiferaySchemeMySQL replacementLiferaySchemeMySQL =
-                new ReplacementLiferaySchemeMySQL();
+        SchemeMySQLConverter schemeMySQLConverter =
+                new SchemeMySQLConverter();
 
-        replacementLiferaySchemeMySQL.replacement(
+        schemeMySQLConverter.converter(
                 _SOURCE_LIFERAY_SCHEME_SQL, _TARGET_LIFERAY_SCHEME_SQL,
                 _NEW_CUSTOMER_SCHEME_OUT_PUT_SQL);
 
@@ -41,7 +41,7 @@ public class ReplacementLiferaySchemeMySQLTest extends ReplacementLiferaySchemeM
             Assertions.assertEquals(contentList.get(0), contentList.get(1));
         }
         else {
-             PrintLoggerUtil.printError(
+             Print.error(
                      "test testLoadingFilesCase fail", null);
         }
 
