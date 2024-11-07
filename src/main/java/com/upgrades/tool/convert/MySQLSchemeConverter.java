@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 /**
  * @author Albert Gomes Cabral
  */
-public class SchemeMySQLConverter extends BaseConverter {
+public class MySQLSchemeConverter extends BaseConverter {
 
     @Override
     protected Pattern[] getContextPattern() {
