@@ -1,6 +1,6 @@
 package com.upgrades.tool.convert;
 
-import com.upgrades.tool.exception.ReplacementException;
+import com.upgrades.tool.exception.ConverterException;
 import com.upgrades.tool.util.Print;
 import com.upgrades.tool.util.ResultsThreadLocal;
 
@@ -12,15 +12,15 @@ import java.util.regex.Pattern;
 /**
  * @author Albert Gomes Cabral
  */
-public abstract class BaseReplacement implements ReplacementLiferayScheme {
+public abstract class BaseConverter implements SchemeConverter {
 
     protected abstract String databaseType();
 
     protected abstract Pattern[] getContextPattern();
 
     @Override
-    public void replacement(String sourceName, String targetName, String newName)
-        throws ReplacementException {
+    public void converter(String sourceName, String targetName, String newName)
+            throws ConverterException {
 
         try {
             List<Map<String, String>> contentMapList = _readFiles(
@@ -32,12 +32,12 @@ public abstract class BaseReplacement implements ReplacementLiferayScheme {
             String resultContent = targetContent;
 
             for (Pattern pattern : getContextPattern()) {
-                resultContent = replacementContextPattern(
+                resultContent = _converterContextPattern(
                         sourceContent, resultContent, pattern);
             }
 
             if (resultContent.equals(targetContent)) {
-                throw new ReplacementException("No exchanges were recorded");
+                throw new ConverterException("No exchanges were recorded");
             }
 
             // Writer out put file
@@ -45,13 +45,21 @@ public abstract class BaseReplacement implements ReplacementLiferayScheme {
             _writerResult(newName, resultContent);
         }
         catch (Exception exception) {
-            throw new ReplacementException(exception);
+            throw new ConverterException(exception);
         }
     }
 
-    protected String replacementContextPattern(
+    private Map<String, String> _buildMapItem(String key, String value) {
+        Map<String, String> itemMap = new HashMap<>();
+
+        itemMap.put(key, value);
+
+        return itemMap;
+    }
+
+    private String _converterContextPattern(
             String sourceContent, String targetContent, Pattern pattern)
-        throws ReplacementException {
+        throws ConverterException {
 
         try {
             Matcher matcherTarget = pattern.matcher(targetContent);
@@ -119,16 +127,8 @@ public abstract class BaseReplacement implements ReplacementLiferayScheme {
             return targetContent;
         }
         catch (Exception exception) {
-            throw new ReplacementException(exception);
+            throw new ConverterException(exception);
         }
-    }
-
-    private Map<String, String> _buildMapItem(String key, String value) {
-        Map<String, String> itemMap = new HashMap<>();
-
-        itemMap.put(key, value);
-
-        return itemMap;
     }
 
     private void _writerResult(String newName, String content) throws IOException {
