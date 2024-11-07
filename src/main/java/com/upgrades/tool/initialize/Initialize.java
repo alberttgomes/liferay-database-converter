@@ -1,40 +1,42 @@
 package com.upgrades.tool.initialize;
 
-import com.upgrades.tool.convert.ReplacementLiferayScheme;
-import com.upgrades.tool.convert.ReplacementLiferaySchemeMySQL;
-import com.upgrades.tool.convert.ReplacementLiferaySchemePostGreSQL;
-import com.upgrades.tool.exception.ReplacementException;
+import com.upgrades.tool.convert.SchemeConverter;
+import com.upgrades.tool.convert.MySQLSchemeConverter;
+import com.upgrades.tool.convert.PostGreSQLSchemeConverter;
+import com.upgrades.tool.exception.ConverterException;
+
+import java.util.Objects;
 
 /**
  * @author Albert Gomes Cabral
  */
 public class Initialize {
 
-    public ReplacementLiferayScheme getReplacementType(
-            String databaseType) throws ReplacementException {
+    public static SchemeConverter getConverterType(String databaseType)
+        throws ConverterException {
+
         try {
-            if (databaseType == null || databaseType.isEmpty()) {
-                throw new ReplacementException(
-                        "Database type cannot be null or empty." +
-                                " Please provide a valid database type.");
+            if (Objects.isNull(databaseType)) {
+                throw new ConverterException(
+                        "Database type cannot be null or empty! " +
+                                "Please provide a valid database type.");
             }
 
-            // check database's type
+            return switch (databaseType) {
+                case "mysql" ->
+                        new MySQLSchemeConverter();
+                case "postgresql" ->
+                        new PostGreSQLSchemeConverter();
+                default ->
+                        throw new ConverterException(
+                                "Database type not supported %s".formatted(
+                                        databaseType));
+            };
+        }
+        catch (ConverterException converterException) {
+            throw new ConverterException(converterException);
+        }
 
-            if (databaseType.equals("mysql")) {
-                return new ReplacementLiferaySchemeMySQL();
-            }
-            else if (databaseType.equals("postgresql")) {
-                return new ReplacementLiferaySchemePostGreSQL();
-            }
-            else {
-                throw new ReplacementException(
-                        "No database type supported: " + databaseType);
-            }
-        }
-        catch (ReplacementException replacementException) {
-            throw new ReplacementException(replacementException);
-        }
     }
 
 }
