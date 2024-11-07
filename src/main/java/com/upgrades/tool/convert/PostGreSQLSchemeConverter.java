@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 /**
  * @author Albert Gomes Cabral
  */
-public class ConverterLiferaySchemePostGreSQL extends BaseConverter {
+public class PostGreSQLSchemeConverter extends BaseConverter {
 
     @Override
     protected String databaseType() {

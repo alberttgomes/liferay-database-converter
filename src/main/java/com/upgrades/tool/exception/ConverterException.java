@@ -3,17 +3,17 @@ package com.upgrades.tool.exception;
 /**
  * @author Albert Gomes Cabral
  */
-public class ReplacementException extends Exception {
+public class ConverterException extends Exception {
 
-    public ReplacementException(Exception exception) {
+    public ConverterException(Exception exception) {
         super(exception);
     }
 
-    public ReplacementException(String message) {
+    public ConverterException(String message) {
         super(message);
     }
 
-    public ReplacementException(String message, Throwable cause) {
+    public ConverterException(String message, Throwable cause) {
         super(message, cause);
     }
 
