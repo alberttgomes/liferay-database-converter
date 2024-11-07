@@ -1,8 +1,8 @@
 package com.upgrades.tool;
 
-import com.upgrades.tool.convert.ReplacementLiferayScheme;
+import com.upgrades.tool.convert.SchemeConverter;
 import com.upgrades.tool.initialize.Initialize;
-import com.upgrades.tool.util.PrintLoggerUtil;
+import com.upgrades.tool.util.Print;
 import com.upgrades.tool.util.ResultsThreadLocal;
 
 /**
@@ -12,37 +12,32 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        System.out.println(
-                "Converting liferay scheme types between Oracle and MySQL tools...");
+        SchemeConverter schemeConverter =
+                Initialize.getConverterType(_DATABASE_TYPE);
 
-        Initialize initialize = new Initialize();
+        Print.info("Running %s".formatted(
+                schemeConverter.getClass().getSimpleName()));
 
-        ReplacementLiferayScheme replacementLiferayScheme =
-                initialize.getReplacementType(_DATABASE_TYPE);
-
-        replacementLiferayScheme.replacement(
+        schemeConverter.converter(
                 _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
-            PrintLoggerUtil.printInfo(
-                    "Replace between " + _SOURCE_FILE_NAME + " and " +
-                            _TARGET_FILE_NAME + " to finished successfully.");
+            Print.info("Converted with success.");
         }
         else {
-            PrintLoggerUtil.printError(
-                    "Replacement fail. Try again!");
+            Print.error("Converter fail. Try again.");
         }
 
     }
 
-    // Necessary variables to getReplacementType the app
+    // Must be initialized
 
-    private static final String _DATABASE_TYPE = "mysql";
+    private static final String _DATABASE_TYPE = "";
 
-    private static final String _SOURCE_FILE_NAME = "liferay-mysql-dump.sql";
+    private static final String _SOURCE_FILE_NAME = "";
 
-    private static final String _TARGET_FILE_NAME = "customer_74_dump_time_stamp.sql";
+    private static final String _TARGET_FILE_NAME = "";
 
-    private static final String _NEW_FILE_NAME = "customer_74_new_dump_time_stamp.sql";
+    private static final String _NEW_FILE_NAME = "";
 
 }
