@@ -1,4 +1,4 @@
-package com.upgrades.tool.convert;
+package com.upgrade.tools.convert;
 
 import java.util.regex.Pattern;
 

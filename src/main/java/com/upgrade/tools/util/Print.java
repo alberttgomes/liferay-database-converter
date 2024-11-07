@@ -1,4 +1,4 @@
-package com.upgrades.tool.util;
+package com.upgrade.tools.util;
 
 import java.time.Instant;
 import java.util.Arrays;

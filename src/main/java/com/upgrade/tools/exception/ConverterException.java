@@ -1,4 +1,4 @@
-package com.upgrades.tool.exception;
+package com.upgrade.tools.exception;
 
 /**
  * @author Albert Gomes Cabral
