@@ -1,9 +1,9 @@
-package com.upgrades.tool.initialize;
+package com.upgrade.tools.initialize;
 
-import com.upgrades.tool.convert.SchemeConverter;
-import com.upgrades.tool.convert.MySQLSchemeConverter;
-import com.upgrades.tool.convert.PostGreSQLSchemeConverter;
-import com.upgrades.tool.exception.ConverterException;
+import com.upgrade.tools.convert.PostGreSQLSchemeConverter;
+import com.upgrade.tools.convert.SchemeConverter;
+import com.upgrade.tools.exception.ConverterException;
+import com.upgrade.tools.convert.MySQLSchemeConverter;
 
 import java.util.Objects;
 

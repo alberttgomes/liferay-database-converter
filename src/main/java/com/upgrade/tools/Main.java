@@ -1,9 +1,9 @@
-package com.upgrades.tool;
+package com.upgrade.tools;
 
-import com.upgrades.tool.convert.SchemeConverter;
-import com.upgrades.tool.initialize.Initialize;
-import com.upgrades.tool.util.Print;
-import com.upgrades.tool.util.ResultsThreadLocal;
+import com.upgrade.tools.convert.SchemeConverter;
+import com.upgrade.tools.initialize.Initialize;
+import com.upgrade.tools.util.Print;
+import com.upgrade.tools.util.ResultsThreadLocal;
 
 /**
  * @author Albert Gomes Cabral

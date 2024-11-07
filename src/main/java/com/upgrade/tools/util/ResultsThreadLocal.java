@@ -1,4 +1,4 @@
-package com.upgrades.tool.util;
+package com.upgrade.tools.util;
 
 /**
  * @author Albert Gomes Cabral

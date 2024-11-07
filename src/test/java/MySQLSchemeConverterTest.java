@@ -1,6 +1,6 @@
-import com.upgrades.tool.convert.MySQLSchemeConverter;
-import com.upgrades.tool.util.Print;
-import com.upgrades.tool.util.ResultsThreadLocal;
+import com.upgrade.tools.convert.MySQLSchemeConverter;
+import com.upgrade.tools.util.Print;
+import com.upgrade.tools.util.ResultsThreadLocal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

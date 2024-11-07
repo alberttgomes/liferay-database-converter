@@ -1,8 +1,8 @@
-package com.upgrades.tool.convert;
+package com.upgrade.tools.convert;
 
-import com.upgrades.tool.exception.ConverterException;
-import com.upgrades.tool.util.Print;
-import com.upgrades.tool.util.ResultsThreadLocal;
+import com.upgrade.tools.exception.ConverterException;
+import com.upgrade.tools.util.Print;
+import com.upgrade.tools.util.ResultsThreadLocal;
 
 import java.io.*;
 import java.util.*;
