@@ -1,4 +1,4 @@
-import com.upgrades.tool.convert.SchemeMySQLConverter;
+import com.upgrades.tool.convert.MySQLSchemeConverter;
 import com.upgrades.tool.util.Print;
 import com.upgrades.tool.util.ResultsThreadLocal;
 import org.junit.jupiter.api.Assertions;
@@ -13,22 +13,22 @@ import java.util.Map;
  * @author Albert Gomes Cabral
  */
 @Testable
-public class SchemeMySQLConverterTest extends SchemeMySQLConverter {
+public class MySQLSchemeConverterTest extends MySQLSchemeConverter {
 
     @BeforeAll
     public static void loadTemplates() {
        Print.info(
               "Initializing tests to " +
-                       SchemeMySQLConverter.class.getName());
+                       MySQLSchemeConverter.class.getName());
     }
 
     @Test
     public void testLoadingFilesCase() throws Exception {
 
-        SchemeMySQLConverter schemeMySQLConverter =
-                new SchemeMySQLConverter();
+        MySQLSchemeConverter mySQLSchemeConverter =
+                new MySQLSchemeConverter();
 
-        schemeMySQLConverter.converter(
+        mySQLSchemeConverter.converter(
                 _SOURCE_LIFERAY_SCHEME_SQL, _TARGET_LIFERAY_SCHEME_SQL,
                 _NEW_CUSTOMER_SCHEME_OUT_PUT_SQL);
 
