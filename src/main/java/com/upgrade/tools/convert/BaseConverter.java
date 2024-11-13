@@ -3,6 +3,7 @@ package com.upgrade.tools.convert;
 import com.upgrade.tools.exception.ConverterException;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
+import com.upgrade.tools.util.SchemeConverterUtil;
 
 import java.io.*;
 import java.util.*;
@@ -14,13 +15,13 @@ import java.util.regex.Pattern;
  */
 public abstract class BaseConverter implements SchemeConverter {
 
-    protected abstract String databaseType();
-
     protected abstract Pattern[] getContextPattern();
+
+    protected abstract String getDatabaseType();
 
     @Override
     public void converter(String sourceName, String targetName, String newName)
-            throws ConverterException {
+        throws ConverterException {
 
         try {
             List<Map<String, String>> contentMapList = _readFiles(
@@ -32,17 +33,63 @@ public abstract class BaseConverter implements SchemeConverter {
             String resultContent = targetContent;
 
             for (Pattern pattern : getContextPattern()) {
-                resultContent = _converterContextPattern(
+                resultContent = converterContextPattern(
                         sourceContent, resultContent, pattern);
             }
 
             if (resultContent.equals(targetContent)) {
-                throw new ConverterException("No exchanges were recorded");
+                Print.warn("No exchanges were recorded", null);
             }
 
             // Writer out put file
 
             _writerResult(newName, resultContent);
+        }
+        catch (Exception exception) {
+            throw new ConverterException(exception);
+        }
+
+    }
+
+    protected String converterContextPattern(
+            String sourceContent, String targetContent, Pattern pattern)
+        throws ConverterException {
+
+        try {
+            Matcher matcherTarget = pattern.matcher(targetContent);
+
+            while (matcherTarget.find()) {
+                Matcher matcherSource = pattern.matcher(sourceContent);
+
+                while (matcherSource.find()) {
+                    String tableNameSource = matcherSource.group(1);
+                    String tableNameTarget = matcherTarget.group(1);
+
+                    if (tableNameSource.equalsIgnoreCase(tableNameTarget)) {
+                        //  Replace all occurrences to table name
+                        targetContent = targetContent.replaceAll(
+                                tableNameTarget, tableNameSource);
+
+                        Print.replacement(
+                                tableNameTarget, tableNameSource, pattern);
+
+                        // Replace columns' definitions
+                        String columnsSource = matcherSource.group(2);
+                        String columnsTarget = matcherTarget.group(2);
+
+                        String convertedColumns =
+                                _getColumns(columnsSource, columnsTarget);
+
+                        targetContent = targetContent.replace(
+                                columnsTarget, convertedColumns);
+
+                        Print.replacement(
+                                columnsTarget, convertedColumns, pattern);
+                    }
+                }
+            }
+
+            return targetContent;
         }
         catch (Exception exception) {
             throw new ConverterException(exception);
@@ -57,83 +104,9 @@ public abstract class BaseConverter implements SchemeConverter {
         return itemMap;
     }
 
-    private String _converterContextPattern(
-            String sourceContent, String targetContent, Pattern pattern)
-        throws ConverterException {
-
-        try {
-            Matcher matcherTarget = pattern.matcher(targetContent);
-
-            while (matcherTarget.find()) {
-                Matcher matcherSource = pattern.matcher(sourceContent);
-
-                while (matcherSource.find()) {
-                    String patternDefinition = pattern.toString();
-
-                    if (patternDefinition.contains("(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))")) {
-
-                        if (matcherTarget.group(2).equalsIgnoreCase(matcherSource.group(2))) {
-                            String name = matcherSource.group(2);
-                            String groupId = matcherTarget.group(4);
-                            String concatGroupId = name + matcherSource.group(3) + groupId;
-
-                            // Replace table name concat with group id
-
-                            targetContent = targetContent.replace(
-                                    matcherTarget.group(1), concatGroupId);
-
-                            Print.replacement(
-                                    matcherTarget.group(1), concatGroupId, pattern);
-
-                            // Replace table definitions
-
-                            targetContent = targetContent.replace(
-                                    matcherTarget.group(5), matcherSource.group(5));
-
-                            Print.replacement(
-                                    matcherTarget.group(5), matcherSource.group(5), pattern);
-                        }
-                    }
-                    else {
-
-                        if (matcherTarget.group(1).equalsIgnoreCase(matcherSource.group(1))) {
-
-                            // Replace table name
-
-                            targetContent = targetContent.replace(
-                                    matcherTarget.group(1), matcherSource.group(1));
-
-                            Print.replacement(
-                                    matcherTarget.group(1), matcherSource.group(1), pattern);
-
-                            // Replace table tableDefinitions
-
-                            String definitionsSource = matcherSource.group(2);
-                            String definitionsTarget = matcherTarget.group(2);
-
-                            String tableDefinitions = _getColumns(
-                                    definitionsSource, definitionsTarget);
-
-                            targetContent = targetContent.replace(
-                                    definitionsTarget, tableDefinitions);
-
-                            Print.replacement(
-                                    definitionsTarget, tableDefinitions, pattern);
-                        }
-                    }
-                }
-            }
-
-            return targetContent;
-        }
-        catch (Exception exception) {
-            throw new ConverterException(exception);
-        }
-    }
-
     private void _writerResult(String newName, String content) throws IOException {
         String resourceDirectory = System.getProperty("user.dir") +
-                _RESOURCE_DIRECTORY;
+                "/src/main/resources/" + getDatabaseType();
 
         String filePath = resourceDirectory + newName;
 
@@ -153,8 +126,8 @@ public abstract class BaseConverter implements SchemeConverter {
             }
             catch (Exception exception) {
                 throw new IOException(
-                        "Unable to create SQL output file " +
-                                exception.getCause());
+                        "Unable to create SQL output file %s".formatted(
+                                exception.getCause()));
             }
             finally {
                 writer.flush();
@@ -169,51 +142,53 @@ public abstract class BaseConverter implements SchemeConverter {
     }
 
     private String _formatColumns(
-            Set<String> allSourceColumn, String columnTarget, String columnSource) {
+            Set<String> newColumns, String columnsTarget, String columnsSource) {
 
         Pattern pattern = Pattern.compile("(`\\w+`)\\s(\\w+\\(?.+),?");
 
-        Matcher matcher = pattern.matcher(columnTarget);
+        Matcher matcher = pattern.matcher(columnsTarget);
 
         while (matcher.find()) {
-            for (String colum : allSourceColumn) {
-                Matcher matcher1 = _COLUMN_NAME_PATTERN.matcher(colum);
+            for (String column : newColumns) {
+                Matcher matcher1 = _COLUMN_NAME_PATTERN.matcher(column);
 
                 while (matcher1.find()) {
                     if (matcher.group(1).equalsIgnoreCase(
                             matcher1.group(1))) {
 
-                        columnTarget = columnTarget.replace(
-                                matcher.group(), colum + ",");
+                        columnsTarget = columnsTarget.replace(
+                                matcher.group(), column + ",");
                     }
                 }
             }
         }
 
-        return _getConstraints(columnTarget, columnSource);
+        return _getConstraints(columnsTarget, columnsSource);
     }
 
     private String _getColumns(String sourceColumns, String targetColumns) {
-        Set<String> columnsTargetSet = _getColumnsSet(targetColumns);
-        Set<String> columnsSourceSet = _getColumnsSet(sourceColumns);
+        Set<String> sourceColumnsSet = _getColumnsSet(sourceColumns);
+        Set<String> targetColumnsSet = _getColumnsSet(targetColumns);
 
-        // Check if exist custom column to keep
+        // Crete new columns based on source file
+        Set<String> newColumns = new HashSet<>(sourceColumnsSet);
 
-        columnsTargetSet.forEach(
+        // Check if existing custom columns to keep
+        targetColumnsSet.forEach(
                 (column) -> {
                     Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
 
                     if (matcher.find()) {
                         String columnTarget = matcher.group(1);
 
-                        if (!columnsSourceSet.toString().contains(columnTarget)) {
-                            columnsSourceSet.add(column);
+                        if (!sourceColumnsSet.toString().contains(columnTarget)) {
+                            newColumns.add(column);
                         }
                     }
                 }
         );
 
-        return _formatColumns(columnsSourceSet, targetColumns, sourceColumns);
+        return _formatColumns(newColumns, targetColumns, sourceColumns);
     }
 
     private Set<String> _getColumnsSet(String columnContent) {
@@ -231,6 +206,16 @@ public abstract class BaseConverter implements SchemeConverter {
     }
 
     private String _getConstraints(String columns, String constraints) {
+        return switch (getDatabaseType()) {
+            case "postgresql" ->
+                    _postgresqlConstraints(columns, constraints);
+            case "mysql" ->
+                    _mysqlConstraints(columns, constraints);
+            default -> columns;
+        };
+    }
+
+    private String _mysqlConstraints(String columns, String constraints) {
         Pattern pattern = Pattern.compile("PRIMARY\\s+KEY\\s+(.+)(\\s*.*)+");
 
         Matcher matcher = pattern.matcher(constraints);
@@ -247,19 +232,38 @@ public abstract class BaseConverter implements SchemeConverter {
         return sb.toString();
     }
 
-    private String _readContent(InputStream inputStream) throws IOException {
-        try (BufferedReader bufferedReader = new BufferedReader(
-                new InputStreamReader(inputStream))) {
+    private String _postgresqlConstraints(String columns, String constraints) {
+        Pattern alterTablePattern = Pattern.compile(
+                "ALTER\\s+TABLE\\s+ONLY\\s+public\\.(\\w+)\\" +
+                        "s+ADD\\s+CONSTRAINT\\s+\\w+\\s+PRIMARY\\s+KEY\\s+(.+)");
 
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
+        Matcher matcher = alterTablePattern.matcher(constraints);
 
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line).append("\n");
+        if (matcher.find()) {
+            columns = columns.concat(matcher.group());
+
+            Pattern indexesPattern = Pattern.compile(
+                    "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
+
+            Matcher indexesMatcher = indexesPattern.matcher(constraints);
+
+            if (indexesMatcher.find()) {
+                columns = columns.concat(indexesMatcher.group());
+
+                Pattern uniqueIndexesPattern = Pattern.compile(
+                        "CREATE\\s+UNIQUE\\s+INDEX\\s+(\\w+)\\s+ON" +
+                                "\\s+public\\.(\\w+.*);");
+
+                Matcher uniqueIndexesMatcher =
+                        uniqueIndexesPattern.matcher(constraints);
+
+                if (uniqueIndexesMatcher.find()) {
+                    return columns.concat(uniqueIndexesMatcher.group());
+                }
             }
-
-            return stringBuilder.toString();
         }
+
+        return columns;
     }
 
     private Map<String, String> _readContentMap(
@@ -267,8 +271,8 @@ public abstract class BaseConverter implements SchemeConverter {
 
         Map<String, String> contentMap = new HashMap<>();
 
-        contentMap.put("source.content", _readContent(source));
-        contentMap.put("target.content", _readContent(target));
+        contentMap.put("source.content", SchemeConverterUtil.readContent(source));
+        contentMap.put("target.content", SchemeConverterUtil.readContent(target));
 
         return contentMap;
     }
@@ -277,7 +281,7 @@ public abstract class BaseConverter implements SchemeConverter {
         throws RuntimeException {
 
         try {
-            if (!sourceName.endsWith(_VALID_EXTENSION) && !targetName.endsWith(_VALID_EXTENSION)) {
+            if (!sourceName.endsWith(_VALID_EXTENSION) || !targetName.endsWith(_VALID_EXTENSION)) {
                 throw new Exception("Extension file must ends %s".formatted(_VALID_EXTENSION));
             }
 
@@ -319,8 +323,6 @@ public abstract class BaseConverter implements SchemeConverter {
 
     private static final Pattern _COLUMN_NAME_PATTERN = Pattern.compile(
             "(`[A-z]+_?`)\\s+[^,]+(?:,|$)");
-
-    private static final String _RESOURCE_DIRECTORY = "/src/main/resources/";
 
     private static final String _VALID_EXTENSION = ".sql";
 
