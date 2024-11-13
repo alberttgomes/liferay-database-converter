@@ -13,15 +13,15 @@ public class MySQLSchemeConverter extends BaseConverter {
     }
 
     @Override
-    protected String databaseType() {
+    protected String getDatabaseType() {
         return "mysql";
     }
 
     private final Pattern _CONCAT_TABLE_NAME_PATTERN = Pattern.compile(
             "CREATE\\s+TABLE\\s+`(([A-Za-z]+)(_[a-zA-Z]+_)([0-9]+))`" +
-                    "\\s*(\\((?:[^)(]+|\\([^)(]*\\))*\\))");
+                    "\\s*\\(((\\s*.*,)+(\\s*.*))\\s*\\)");
 
     private final Pattern _TABLE_NAME_PATTERN = Pattern.compile(
-            "CREATE\\s+TABLE\\s+(`[A-z]+_?`)\\s*\\(((\\s*.*,)+(\\s*.*))\\s*\\)\"");
+            "CREATE\\s+TABLE\\s+(`[A-z]+_?`)\\s*\\(((\\s*.*,)+(\\s*.*))\\s*\\)");
 
 }

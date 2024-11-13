@@ -8,13 +8,13 @@ import java.util.regex.Pattern;
 public class PostGreSQLSchemeConverter extends BaseConverter {
 
     @Override
-    protected String databaseType() {
-        return "postgresql";
+    protected Pattern[] getContextPattern() {
+        return new Pattern[] {_CONCAT_TABLE_NAME_PATTERN, _TABLE_NAME_PATTERN};
     }
 
     @Override
-    protected Pattern[] getContextPattern() {
-        return new Pattern[] {_CONCAT_TABLE_NAME_PATTERN, _TABLE_NAME_PATTERN};
+    protected String getDatabaseType() {
+        return "postgresql";
     }
 
     private final Pattern _CONCAT_TABLE_NAME_PATTERN = Pattern.compile(
