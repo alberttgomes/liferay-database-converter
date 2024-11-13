@@ -2,7 +2,7 @@
 build/
 .idea/
 src/main/resources/mysql/*.sql
-src/main/resources/postgress/*.sql
+src/main/resources/postgresql/*.sql
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
