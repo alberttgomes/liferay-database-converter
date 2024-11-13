@@ -1,0 +1,21 @@
+services:
+
+  postgres:
+    image: postgres:14.13
+    container_name: upgrade-tool-postgres
+    environment:
+      - POSTGRES_USER=liferay
+      - POSTGRES_PASSWORD=liferay
+      - POSTGRES_DB=liferay
+    ports:
+      - "5432:5432"
+
+  mysql:
+    image: mysql:8.0
+    container_name: upgrade-tool-mysql
+    environment:
+      - MYSQL_DATABASE=liferay
+      - MYSQL_USER=liferay
+      - MYSQL_PASSWORD=liferay
+    ports:
+      - "3307:3306"
