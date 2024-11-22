@@ -5,8 +5,18 @@ import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
 import com.upgrade.tools.util.SchemeConverterUtil;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -322,7 +332,7 @@ public abstract class BaseConverter implements SchemeConverter {
     }
 
     private static final Pattern _COLUMN_NAME_PATTERN = Pattern.compile(
-            "(`[A-z]+_?`)\\s+[^,]+(?:,|$)");
+            "(`?[A-z]+_?`?)\\s+[^,]+(?:,|$)");
 
     private static final String _VALID_EXTENSION = ".sql";
 
