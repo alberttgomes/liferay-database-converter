@@ -1,6 +1,7 @@
 .gradle
 build/
 .idea/
+src/main/resources/*.sql
 src/main/resources/mysql/*.sql
 src/main/resources/postgresql/*.sql
 !gradle/wrapper/gradle-wrapper.jar
