@@ -4,7 +4,7 @@
 - Java 21
 - Docker and Docker Compose
 
-### Steps
+### How to get a dump from your Liferay's version
 
 1. Download your bundle version from `https://customer.liferay.com/en_US/downloads`
     > **The bundle version must be the same as your project**
@@ -21,41 +21,58 @@
     ```
 
 4. Go to the bundle you just downloaded, and in the root folder, create a file `portal-ext.propeties` and put the following properties:
+    
+    MySQL:
     ```
     jdbc.default.driverClassName=com.mysql.cj.jdbc.Driver
-    jdbc.default.url=jdbc:mysql://localhost:3307/lportal?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
-    jdbc.default.username=root
-    jdbc.default.password=
+    jdbc.default.url=jdbc:mysql://localhost:3307/liferay?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
+    jdbc.default.username=liferay
+    jdbc.default.password=liferay
+    ```
+    PostgreSQL: 
+    ```
+    jdbc.default.driverClassName=com.mysql.cj.jdbc.Driver
+    jdbc.default.url=jdbc:postgresql://localhost:5432/liferay
+    jdbc.default.username=liferay
+    jdbc.default.password=liferay
     ```
 
-5. Now, go to the **tomcat/bin** folder in your bundle, and run:
+6. Now, go to the **tomcat/bin** folder in your downloaded bundle, and run:
    ``
-   ./catalina.sh jpda run
+   ./catalina.sh run
    `` 
 
-6. After starting the portal, go to the docker container and extract a dump file:
+7. After starting the portal, go to the docker container and extract a dump file:
    -  Go to docker container:
     ```
-    docker exec -it mysql_master bash
+    docker compose exec mysql|posgres bash
     ```
     - Run the following command to generate a dump
+       
+    MySQL:
     ```
-    mysql -u lportal lportal > [name-file-dump.sql]
+    mysqldump -u liferay liferay > [name-file-dump.sql]
     ```
+    PostgreSQL:
+    ```
+    pg_dump -U liferay liferay > [name-file-dump.sql]
+    ```  
+
     - Copy the dump out from the container:
+
     ```
-    docker cp mysql_master:/[name-file-dump.slq] [destination folder]
+    docker compose cp mysql|postgres:/[name-file-dump.slq] [destination folder]
     ```
 
-7. Now, put both dumps (the customer dump, and the extract dump from your bundle version) in the  `/src/main/resources/`
+9. Now, put both dumps (the customer dump, and the extract dump from your bundle version) in the  `/src/main/resources/`
 
-8. Rename the environment variables in `Main.java` to your files, following the rules below:
+10. Rename the environment variables in `Main.java` to your files, following the rules below:
    - `_DATABASE_TYPE`: Database type supported _(MySQL/Postgresql)_
    - `_SOURCE_FILE_NAME`: Name file dump with the Liferay Scheme.
    - `_TARGET_FILE_NAME`: Name file dump with the Customer Scheme.
    - `_NEW_FILE_NAME`: New file name output.
 
-9. Run the project
+11. Run the project
 
 ### Note
 > This application will fix column issues when using the Pentaho tool.
