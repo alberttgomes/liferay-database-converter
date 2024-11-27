@@ -9,7 +9,7 @@ public class PostGreSQLSchemeConverter extends BaseConverter {
 
     @Override
     protected Pattern[] getContextPattern() {
-        return new Pattern[] {_CONCAT_TABLE_NAME_PATTERN, _TABLE_NAME_PATTERN};
+        return new Pattern[] {_TABLE_NAME_PATTERN};
     }
 
     @Override
@@ -17,11 +17,9 @@ public class PostGreSQLSchemeConverter extends BaseConverter {
         return "postgresql";
     }
 
-    private final Pattern _CONCAT_TABLE_NAME_PATTERN = Pattern.compile(
-            "CREATE\\s+TABLE\\s+public\\.(([A-Za-z]+)(_[a-zA-Z]+_)" +
-                    "([0-9]+))\\s*\\((\\s*.*)+(\\s*.*)");
-
     private final Pattern _TABLE_NAME_PATTERN = Pattern.compile(
-            "CREATE\\s+TABLE\\s+public\\.([A-z]+_?)\\s*\\(((\\s*.*)+(\\s*.*))\\s*\\)");
+            "CREATE\\s+TABLE\\s+(?:public\\.)?([a-zA-Z_]+)\\s*\\(([^)]*?(\\([^)]*\\)[^)]*?)*)\\);",
+            Pattern.DOTALL
+    );
 
 }
