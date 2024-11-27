@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author Albert Gomes Cabral
@@ -50,10 +51,17 @@ public abstract class BaseConverter implements SchemeConverter {
             if (resultContent.equals(targetContent)) {
                 Print.warn("No exchanges were recorded", null);
             }
+            else {
+                if (getDatabaseType().equals("postgresql")) {
+                    Print.info("Adding indexes and rules to %s".formatted(
+                            getDatabaseType()));
 
-            // Writer out put file
+                    resultContent = _postgresqlConstraints(
+                            resultContent, sourceContent);
+                }
 
-            _writerResult(newName, resultContent);
+                _writerResult(newName, resultContent);
+            }
         }
         catch (Exception exception) {
             throw new ConverterException(exception);
@@ -76,29 +84,30 @@ public abstract class BaseConverter implements SchemeConverter {
                     String tableNameTarget = matcherTarget.group(1);
 
                     if (tableNameSource.equalsIgnoreCase(tableNameTarget)) {
-                        //  Replace all occurrences to table name
+                        Print.info("Updating table %s".formatted(tableNameSource));
+
                         targetContent = targetContent.replaceAll(
                                 tableNameTarget, tableNameSource);
 
-                        Print.replacement(
-                                tableNameTarget, tableNameSource, pattern);
-
-                        // Replace columns' definitions
                         String columnsSource = matcherSource.group(2);
                         String columnsTarget = matcherTarget.group(2);
 
-                        String convertedColumns =
-                                _getColumns(columnsSource, columnsTarget);
+                        String convertedColumns = _getColumns(
+                                columnsSource, columnsTarget);
 
                         targetContent = targetContent.replace(
                                 columnsTarget, convertedColumns);
+
+                        if (getDatabaseType().equals("mysql")) {
+                            targetContent = _mysqlConstraints(
+                                    convertedColumns, columnsSource);
+                        }
 
                         Print.replacement(
                                 columnsTarget, convertedColumns, pattern);
                     }
                 }
             }
-
             return targetContent;
         }
         catch (Exception exception) {
@@ -114,91 +123,59 @@ public abstract class BaseConverter implements SchemeConverter {
         return itemMap;
     }
 
-    private void _writerResult(String newName, String content) throws IOException {
-        String resourceDirectory = System.getProperty("user.dir") +
-                "/src/main/resources/" + getDatabaseType();
-
-        String filePath = resourceDirectory + newName;
-
-        File file = new File(filePath);
-
-        try (FileWriter writer = new FileWriter(file)) {
-            try {
-                if (file.exists()) {
-                    writer.write(content);
-
-                    ResultsThreadLocal.setResultsThreadLocal(true);
-                }
-                else {
-                    throw new IOException(
-                            "File already exists %s".formatted(newName));
-                }
-            }
-            catch (Exception exception) {
-                throw new IOException(
-                        "Unable to create SQL output file %s".formatted(
-                                exception.getCause()));
-            }
-            finally {
-                writer.flush();
-
-                writer.close();
-            }
+    private String _concat(String value, int index, int size) {
+        if (index == size) {
+            return value;
         }
-        catch (IOException ioException) {
-            throw new IOException(ioException);
+        else {
+            return value + ",";
         }
-
     }
 
-    private String _formatColumns(
-            Set<String> newColumns, String columnsTarget, String columnsSource) {
+    private String _extractColumnName(String column) {
+        Pattern pattern = Pattern.compile("^`?\\w+`?");
+        Matcher matcher = pattern.matcher(column);
 
-        Pattern pattern = Pattern.compile("(`\\w+`)\\s(\\w+\\(?.+),?");
+        return matcher.find() ? matcher.group() : null;
+    }
 
-        Matcher matcher = pattern.matcher(columnsTarget);
+    private String _formatColumns(Set<String> newColumns, String columnsTarget) {
+        Pattern pattern = Pattern.compile(
+                "(`?\"?[a-zA-Z0-9_.-]+_?\"?`?)\\s(\\w+\\(?.+),?");
 
-        while (matcher.find()) {
+        Matcher matcherTarget = pattern.matcher(columnsTarget);
+
+        int index = 0;
+
+        while (matcherTarget.find()) {
             for (String column : newColumns) {
-                Matcher matcher1 = _COLUMN_NAME_PATTERN.matcher(column);
+                Matcher matcherColumn = _COLUMN_NAME_PATTERN.matcher(column);
 
-                while (matcher1.find()) {
-                    if (matcher.group(1).equalsIgnoreCase(
-                            matcher1.group(1))) {
+                while (matcherColumn.find()) {
+                    String normalizeTargetColumn = matcherTarget.group(1).replaceAll(
+                            "\"", "");
+
+                    String normalizeNewColumn = matcherColumn.group(1).replaceAll(
+                            "\"", "");
+
+                    if (normalizeTargetColumn.equalsIgnoreCase(normalizeNewColumn)) {
+                        index++;
 
                         columnsTarget = columnsTarget.replace(
-                                matcher.group(), column + ",");
+                                matcherTarget.group(),
+                                _concat(column, index, newColumns.size()));
                     }
                 }
             }
         }
 
-        return _getConstraints(columnsTarget, columnsSource);
+        return columnsTarget;
     }
 
     private String _getColumns(String sourceColumns, String targetColumns) {
-        Set<String> sourceColumnsSet = _getColumnsSet(sourceColumns);
-        Set<String> targetColumnsSet = _getColumnsSet(targetColumns);
-
-        // Crete new columns based on source file
-        Set<String> newColumns = new HashSet<>(sourceColumnsSet);
-
-        // Check if existing custom columns to keep
-        targetColumnsSet.forEach(
-                (column) -> {
-                    Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
-
-                    if (matcher.find()) {
-                        String columnTarget = matcher.group(1);
-
-                        if (!sourceColumnsSet.toString().contains(columnTarget)) {
-                            newColumns.add(column);
-                        }
-                    }
-                }
-        );
-
-        return _formatColumns(newColumns, targetColumns, sourceColumns);
+        return _formatColumns(
+                _verifyExistsCustomColumns(sourceColumns, targetColumns),
+                targetColumns);
     }
 
     private Set<String> _getColumnsSet(String columnContent) {
@@ -213,16 +190,6 @@ public abstract class BaseConverter implements SchemeConverter {
         }
 
         return columns;
-    }
-
-    private String _getConstraints(String columns, String constraints) {
-        return switch (getDatabaseType()) {
-            case "postgresql" ->
-                    _postgresqlConstraints(columns, constraints);
-            case "mysql" ->
-                    _mysqlConstraints(columns, constraints);
-            default -> columns;
-        };
     }
 
     private String _mysqlConstraints(String columns, String constraints) {
@@ -242,38 +209,47 @@ public abstract class BaseConverter implements SchemeConverter {
         return sb.toString();
     }
 
-    private String _postgresqlConstraints(String columns, String constraints) {
-        Pattern alterTablePattern = Pattern.compile(
-                "ALTER\\s+TABLE\\s+ONLY\\s+public\\.(\\w+)\\" +
-                        "s+ADD\\s+CONSTRAINT\\s+\\w+\\s+PRIMARY\\s+KEY\\s+(.+)");
+    private String _postgresqlConstraints(String targetConstraints, String sourceConstraints) {
+        Pattern indexesPattern = Pattern.compile(
+                "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
 
-        Matcher matcher = alterTablePattern.matcher(constraints);
+        Matcher indexesMatcher = indexesPattern.matcher(sourceConstraints);
 
-        if (matcher.find()) {
-            columns = columns.concat(matcher.group());
+        String delimiter = "--\n" + "-- PostgreSQL database dump complete";
 
-            Pattern indexesPattern = Pattern.compile(
-                    "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
-
-            Matcher indexesMatcher = indexesPattern.matcher(constraints);
-
-            if (indexesMatcher.find()) {
-                columns = columns.concat(indexesMatcher.group());
-
-                Pattern uniqueIndexesPattern = Pattern.compile(
-                        "CREATE\\s+UNIQUE\\s+INDEX\\s+(\\w+)\\s+ON" +
-                                "\\s+public\\.(\\w+.*);");
-
-                Matcher uniqueIndexesMatcher =
-                        uniqueIndexesPattern.matcher(constraints);
-
-                if (uniqueIndexesMatcher.find()) {
-                    return columns.concat(uniqueIndexesMatcher.group());
-                }
-            }
+        while (indexesMatcher.find()) {
+            targetConstraints = targetConstraints.replace(
+                    delimiter,
+                    indexesMatcher.group() + "\n\n" + delimiter
+            );
         }
 
-        return columns;
+        Pattern uniqueIndexesPattern = Pattern.compile(
+                "CREATE\\s+UNIQUE\\s+INDEX\\s+(\\w+)\\s+ON" +
+                        "\\s+public\\.(\\w+.*);");
+
+        Matcher uniqueIndexesMatcher = uniqueIndexesPattern.matcher(sourceConstraints);
+
+        while (uniqueIndexesMatcher.find()) {
+            targetConstraints = targetConstraints.replace(
+                    delimiter,
+                    uniqueIndexesMatcher.group() + "\n\n" + delimiter
+            );
+        }
+
+        Pattern createRulePattern = Pattern.compile(
+                "CREATE\\s+RULE\\s+[\\w\\s]+ AS[\\s\\S]*?WHERE\\s*\\([^;]*\\);");
+
+        Matcher createRuleMatcher = createRulePattern.matcher(sourceConstraints);
+
+        while (createRuleMatcher.find()) {
+            targetConstraints = targetConstraints.replace(
+                    delimiter,
+                    createRuleMatcher.group() + "\n\n" + delimiter
+            );
+        }
+
+        return targetConstraints;
     }
 
     private Map<String, String> _readContentMap(
@@ -331,8 +307,74 @@ public abstract class BaseConverter implements SchemeConverter {
 
     }
 
+    private Set<String> _verifyExistsCustomColumns(String sourceColumns, String targetColumns) {
+        Set<String> sourceColumnsSet = _getColumnsSet(sourceColumns);
+        Set<String> targetColumnsSet = _getColumnsSet(targetColumns);
+
+        // Crete new columns based on source file
+        Set<String> newColumns = new HashSet<>(sourceColumnsSet);
+
+        // Check if existing custom columns to keep
+        targetColumnsSet.forEach(
+                (column) -> {
+                    Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
+
+                    if (matcher.find()) {
+                        String columnTarget = matcher.group(1);
+
+                        Set<String> collected = sourceColumnsSet.stream()
+                                .map(this::_extractColumnName)
+                                .filter(columnTarget::equalsIgnoreCase)
+                                .collect(Collectors.toSet());
+
+                        if (collected.contains(columnTarget)) return;
+
+                        newColumns.add(column);
+                    }
+                }
+        );
+
+        return newColumns;
+    }
+
+    private void _writerResult(String newName, String content) throws IOException {
+        String resourceDirectory = System.getProperty("user.dir") +
+                "/src/main/resources/" + getDatabaseType() + "/";
+
+        String filePath = resourceDirectory + newName;
+
+        File file = new File(filePath);
+
+        try (FileWriter writer = new FileWriter(file)) {
+            try {
+                if (file.exists()) {
+                    writer.write(content);
+
+                    ResultsThreadLocal.setResultsThreadLocal(true);
+                }
+                else {
+                    throw new IOException(
+                            "File already exists %s".formatted(newName));
+                }
+            }
+            catch (Exception exception) {
+                throw new IOException(
+                        "Unable to create SQL output file %s".formatted(
+                                exception.getCause()));
+            }
+            finally {
+                writer.flush();
+
+                writer.close();
+            }
+        }
+        catch (IOException ioException) {
+            throw new IOException(ioException);
+        }
+    }
+
     private static final Pattern _COLUMN_NAME_PATTERN = Pattern.compile(
-            "(`?[A-z]+_?`?)\\s+[^,]+(?:,|$)");
+            "(`?\"?[a-zA-Z0-9_.-]+_?\"?`?)\\s+[^,]+(?:,|$)");
 
     private static final String _VALID_EXTENSION = ".sql";
 
