@@ -1,4 +1,4 @@
-# How to use tool to fix Pentaho issues
+# How to use tool to fix Column Issues
 
 ## Requirements:
 - Java 21
