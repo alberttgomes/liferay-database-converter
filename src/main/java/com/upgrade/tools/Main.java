@@ -11,9 +11,8 @@ import com.upgrade.tools.util.ResultsThreadLocal;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-
-        SchemeConverter schemeConverter =
-                Initialize.getConverterType(_DATABASE_TYPE);
+        SchemeConverter schemeConverter = Initialize.getConverterType(
+                _DATABASE_TYPE);
 
         Print.info("Running %s".formatted(
                 schemeConverter.getClass().getSimpleName()));
@@ -27,7 +26,6 @@ public class Main {
         else {
             Print.error("Converter fail. Try again.");
         }
-
     }
 
     // Must be initialized
