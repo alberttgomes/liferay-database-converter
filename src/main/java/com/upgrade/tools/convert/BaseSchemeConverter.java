@@ -117,7 +117,11 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
     private String _extractColumnName(String column) {
         Pattern pattern = Pattern.compile("^`?\\w+`?");
-        Matcher matcher = pattern.matcher(column);
+
+        String normalizeColumn = column.replaceAll(
+            "\"", "");
+
+        Matcher matcher = pattern.matcher(normalizeColumn);
 
         return matcher.find() ? matcher.group() : null;
     }
@@ -130,29 +134,32 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
         int index = 0;
 
+        StringBuilder sb = new StringBuilder();
+
         while (matcherTarget.find()) {
             for (String column : newColumns) {
                 Matcher matcherColumn = _COLUMN_NAME_PATTERN.matcher(column);
 
                 while (matcherColumn.find()) {
                     String normalizeTargetColumn = matcherTarget.group(1).replaceAll(
-                            "\"", "");
-
+                        "\"", "");
                     String normalizeNewColumn = matcherColumn.group(1).replaceAll(
-                            "\"", "");
+                        "\"", "");
 
                     if (normalizeTargetColumn.equalsIgnoreCase(normalizeNewColumn)) {
                         index++;
 
-                        columnsTarget = columnsTarget.replace(
-                            matcherTarget.group(),
-                            _concat(column, index, newColumns.size()));
+                        matcherTarget.appendReplacement(
+                            sb, Matcher.quoteReplacement(
+                                    _concat(column, index, newColumns.size())));
                     }
                 }
             }
         }
 
-        return columnsTarget;
+        matcherTarget.appendTail(sb);
+
+        return sb.toString();
     }
 
     private String _getColumns(String sourceColumns, String targetColumns) {
@@ -265,14 +272,15 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                 Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
 
                 if (matcher.find()) {
-                    String columnTarget = matcher.group(1);
+                    String columnTargetNormalized = matcher.group(1).replaceAll(
+                        "\"", "").toLowerCase();
 
                     Set<String> collected = sourceColumnsSet.stream()
                         .map(this::_extractColumnName)
-                        .filter(columnTarget::equalsIgnoreCase)
+                        .filter(columnTargetNormalized::equalsIgnoreCase)
                         .collect(Collectors.toSet());
 
-                    if (collected.contains(columnTarget)) return;
+                    if (collected.contains(columnTargetNormalized)) return;
 
                     newColumns.add(column);
                 }
