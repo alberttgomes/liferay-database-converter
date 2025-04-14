@@ -1,7 +1,7 @@
 package com.upgrade.tools;
 
 import com.upgrade.tools.convert.SchemeConverter;
-import com.upgrade.tools.initialize.Initialize;
+import com.upgrade.tools.initialize.SchemeConverterInitialize;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
 
@@ -11,14 +11,13 @@ import com.upgrade.tools.util.ResultsThreadLocal;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        SchemeConverter schemeConverter = Initialize.getConverterType(
+        SchemeConverter schemeConverter = SchemeConverterInitialize.getConverterType(
                 _DATABASE_TYPE);
 
-        Print.info("Running %s".formatted(
-                schemeConverter.getClass().getSimpleName()));
+        Print.info("Running " + schemeConverter.getClass().getSimpleName());
 
         schemeConverter.converter(
-                _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME);
+            _SOURCE_FILE_NAME, _TARGET_FILE_NAME, _NEW_FILE_NAME);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             Print.info("Converted with success.");
