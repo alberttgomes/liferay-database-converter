@@ -1,5 +1,6 @@
 package com.upgrade.tools.convert;
 
+import com.upgrade.tools.convert.constants.SchemeConverterSupportedTypes;
 import com.upgrade.tools.exception.ConverterException;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
@@ -73,7 +74,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                 String tableNameTarget = matcherTarget.group(1);
 
                 if (tableNameSource.equalsIgnoreCase(tableNameTarget)) {
-                    Print.info(String.format("Updating table %s", tableNameSource));
+                    Print.info(String.format("Converting table %s", tableNameSource));
 
                     targetContent = targetContent.replaceAll(tableNameTarget, tableNameSource);
 
@@ -84,11 +85,35 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
                     targetContent = targetContent.replace(columnsTarget, convertedColumns);
 
-                    if (getDatabaseType().equals("mysql")) {
+                    if (getDatabaseType().equals(SchemeConverterSupportedTypes.MYSQL)) {
                         targetContent = _mysqlConstraints(convertedColumns, columnsSource);
                     }
 
                     Print.replacement(columnsTarget, convertedColumns, pattern);
+                }
+            }
+        }
+
+        if (getDatabaseType().equals(SchemeConverterSupportedTypes.POSTGRES)) {
+            Pattern copyStatementPattern = Pattern.compile(
+                "COPY\\s*public\\.(\\w+)\\s+(\\(.*\\))\\s+FROM\\s+\\w+;");
+
+            Matcher copyStatementMatcher = copyStatementPattern.matcher(targetContent);
+
+            while (copyStatementMatcher.find()) {
+                String tableName = copyStatementMatcher.group(1);
+
+                if (sourceContent.contains(tableName)) {
+                    String copyStatement = copyStatementMatcher.group(2);
+
+                    Print.info(
+                        String.format("Converting %s attributes to lower case...", tableName));
+
+                    Print.replacement(
+                        copyStatement, copyStatement.toLowerCase(), copyStatementPattern);
+
+                    targetContent = targetContent.replace(
+                        copyStatement, copyStatement.toLowerCase());
                 }
             }
         }
@@ -302,43 +327,33 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         File file = new File(filePath);
 
         try (BufferedWriter writer =
-                 new BufferedWriter(new FileWriter(file))) {
-            try {
-                if (file.exists()) {
-                    int index = 0;
+                     new BufferedWriter(new FileWriter(file))) {
 
-                    for (String content : contents) {
-                        index++;
+            int index = 0;
 
-                        if (index == contents.size()) {
-                            break;
-                        }
+            for (String content : contents) {
+                index++;
 
-                        writer.write(content);
-                    }
-
-                    String postProcessContent = postProcess(
-                        contents.getLast(), sourceContent);
-
-                    if (!postProcessContent.isEmpty()) {
-                        writer.write(postProcessContent);
-                    }
-
-                    ResultsThreadLocal.setResultsThreadLocal(true);
+                if (index == contents.size()) {
+                    break;
                 }
+
+                writer.write(content);
             }
-            catch (Exception exception) {
-                throw new IOException(
-                    "Unable to create SQL output file" +
-                        exception.getCause());
+
+            String postProcessContent = postProcess(
+                contents.getLast(), sourceContent);
+
+            if (!postProcessContent.isEmpty()) {
+                writer.write(postProcessContent);
             }
-            finally {
-                writer.flush();
-                writer.close();
-            }
+
+            ResultsThreadLocal.setResultsThreadLocal(true);
+
         }
         catch (IOException ioException) {
-            throw new IOException(ioException);
+            throw new IOException(
+                "Unable to create SQL output file" + ioException.getCause());
         }
     }
 
