@@ -29,7 +29,7 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
         String targetConstraints, String sourceConstraints) {
 
         Print.info(String.format(
-            "Adding indexes and rules to %s", getDatabaseType()));
+            "Executing post process to %s database", getDatabaseType()));
 
         Pattern indexesPattern = Pattern.compile(
             "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
@@ -72,7 +72,7 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
     }
 
     private final Pattern _TABLE_NAME_PATTERN = Pattern.compile(
-        "CREATE\\s+TABLE\\s+(?:public\\.)?([a-zA-Z_]+)\\s*\\(([^)]*?(\\([^)]*\\)[^)]*?)*)\\);",
+        "CREATE\\s+TABLE\\s+(?:public\\.)?([a-zA-Z_0-9]+)\\s*\\(([^)]*?(\\([^)]*\\)[^)]*?)*)\\);",
         Pattern.DOTALL);
 
 }
