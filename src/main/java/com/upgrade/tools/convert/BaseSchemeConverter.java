@@ -21,8 +21,10 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
     protected abstract String getDatabaseType();
 
-    protected String postProcess(String... content) {
-        return content[0];
+    protected List<String> postProcess(
+        List<String> contents, String sourceContent) {
+
+        return contents;
     }
 
     @Override
@@ -53,7 +55,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             }
 
             _writerResult(
-                newName, resultTargetContentChunks, sourceContent);
+                newName, postProcess(resultTargetContentChunks, sourceContent));
         }
         catch (Exception exception) {
             throw new ConverterException(exception);
@@ -90,30 +92,6 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                     }
 
                     Print.replacement(columnsTarget, convertedColumns, pattern);
-                }
-            }
-        }
-
-        if (getDatabaseType().equals(SchemeConverterSupportedTypes.POSTGRES)) {
-            Pattern copyStatementPattern = Pattern.compile(
-                "COPY\\s*public\\.(\\w+)\\s+(\\(.*\\))\\s+FROM\\s+\\w+;");
-
-            Matcher copyStatementMatcher = copyStatementPattern.matcher(targetContent);
-
-            while (copyStatementMatcher.find()) {
-                String tableName = copyStatementMatcher.group(1);
-
-                if (sourceContent.contains(tableName)) {
-                    String copyStatement = copyStatementMatcher.group(2);
-
-                    Print.info(
-                        String.format("Converting %s attributes to lower case...", tableName));
-
-                    Print.replacement(
-                        copyStatement, copyStatement.toLowerCase(), copyStatementPattern);
-
-                    targetContent = targetContent.replace(
-                        copyStatement, copyStatement.toLowerCase());
                 }
             }
         }
@@ -316,8 +294,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
     }
 
     private void _writerResult(
-            String newName, List<String> contents, String sourceContent)
-        throws IOException {
+        String newName, List<String> contents) throws IOException {
 
         String resourceDirectory = System.getProperty("user.dir") +
             "/src/main/resources/" + getDatabaseType() + "/";
@@ -329,27 +306,11 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         try (BufferedWriter writer =
                      new BufferedWriter(new FileWriter(file))) {
 
-            int index = 0;
-
             for (String content : contents) {
-                index++;
-
-                if (index == contents.size()) {
-                    break;
-                }
-
                 writer.write(content);
             }
 
-            String postProcessContent = postProcess(
-                contents.getLast(), sourceContent);
-
-            if (!postProcessContent.isEmpty()) {
-                writer.write(postProcessContent);
-            }
-
             ResultsThreadLocal.setResultsThreadLocal(true);
-
         }
         catch (IOException ioException) {
             throw new IOException(
