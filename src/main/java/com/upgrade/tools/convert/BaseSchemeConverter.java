@@ -38,7 +38,8 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         throws ConverterException {
 
         try {
-            Map<String, List<String>> contentsMap = _readFiles(path, sourceName, targetName);
+            Map<String, List<String>> contentsMap =
+                _readFiles(path, sourceName, targetName);
 
             String sourceContent =
                 String.valueOf(contentsMap.get("source.content").getFirst());
@@ -58,7 +59,8 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             }
 
             _writerResult(
-                newName, postProcess(resultTargetContentChunks, sourceContent));
+                postProcess(resultTargetContentChunks, sourceContent),
+                path, newName);
         }
         catch (Exception exception) {
             throw new ConverterException(exception);
@@ -254,14 +256,10 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
     }
 
     private void _writerResult(
-        String newName, List<String> contents) throws IOException {
+            List<String> contents, String path, String newName)
+        throws IOException {
 
-        String resourceDirectory = System.getProperty("user.dir") +
-            "/src/main/resources/" + getDatabaseType() + "/";
-
-        String filePath = resourceDirectory + newName;
-
-        File file = new File(filePath);
+        File file = new File(path + newName);
 
         try (BufferedWriter writer =
                      new BufferedWriter(new FileWriter(file))) {
