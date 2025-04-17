@@ -1,5 +1,6 @@
 package com.upgrade.tools.convert;
 
+import com.upgrade.tools.convert.constants.SchemeConverterSupportType;
 import com.upgrade.tools.util.Print;
 
 import java.util.ArrayList;
@@ -19,28 +20,78 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
 
     @Override
     protected String getDatabaseType() {
-        return "postgresql";
+        return SchemeConverterSupportType.POSTGRES;
     }
 
     @Override
     protected List<String> postProcess(List<String> contents, String sourceContent) {
-        return _postgresqlConstraints(contents, sourceContent);
+        return _postProcess(contents, sourceContent);
     }
 
-    private List<String> _postgresqlConstraints(
+    private List<String> _postProcess(
         List<String> targetStatements, String sourceStatement) {
 
         Print.info(String.format(
             "Executing post process to %s database", getDatabaseType()));
 
+        List<String> resultStatements = _attributesTransform(targetStatements);
+
+        resultStatements.add(
+            _addIndexesAndRules(targetStatements.getLast(), sourceStatement));
+
+        return resultStatements;
+    }
+
+    private String _addIndexesAndRules(String lasContent, String sourceStatement) {
+        Pattern indexesPattern = Pattern.compile(
+            "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
+
+        Matcher indexesMatcher = indexesPattern.matcher(sourceStatement);
+
+        String delimiter = "--\n" + "-- PostgreSQL database dump complete";
+
+        while (indexesMatcher.find()) {
+            lasContent = lasContent.replace(
+                delimiter, indexesMatcher.group() + "\n\n" + delimiter
+            );
+        }
+
+        Pattern uniqueIndexesPattern = Pattern.compile(
+        "CREATE\\s+UNIQUE\\s+INDEX\\s+(\\w+)\\s+ON" +
+                "\\s+public\\.(\\w+.*);");
+
+        Matcher uniqueIndexesMatcher =
+            uniqueIndexesPattern.matcher(sourceStatement);
+
+        while (uniqueIndexesMatcher.find()) {
+            lasContent = lasContent.replace(
+                delimiter, uniqueIndexesMatcher.group() + "\n\n" + delimiter
+            );
+        }
+
+        Pattern createRulesPattern = Pattern.compile(
+            "CREATE\\s+RULE\\s+[\\w\\s]+ AS[\\s\\S]*?WHERE\\s*\\([^;]*\\);");
+
+        Matcher createRulesMatcher = createRulesPattern.matcher(sourceStatement);
+
+        while (createRulesMatcher.find()) {
+            lasContent = lasContent.replace(
+                delimiter, createRulesMatcher.group() + "\n\n" + delimiter
+            );
+        }
+
+        return lasContent;
+    }
+
+    private List<String> _attributesTransform(List<String> statements) {
         List<String> resultStatements = new ArrayList<>();
 
         int index = 0;
 
-        for (String statement : targetStatements) {
+        for (String statement : statements) {
             index++;
 
-            if (index == targetStatements.size()) {
+            if (index == statements.size()) {
                 break;
             }
 
@@ -52,60 +103,19 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
             while (copyStatementMatcher.find()) {
                 String tableName = copyStatementMatcher.group(1);
 
-                if (sourceStatement.contains(tableName)) {
-                    String copyStatement = copyStatementMatcher.group(2);
+                Print.info("Applying to %s".formatted(tableName));
 
-                    Print.replacement(
-                        copyStatement, copyStatement.toLowerCase(), copyStatementPattern);
+                String copyStatement = copyStatementMatcher.group(2);
 
-                    statement = statement.replace(
-                        copyStatement, copyStatement.toLowerCase());
-                }
+                Print.replacement(
+                    copyStatement, copyStatement.toLowerCase(), copyStatementPattern);
+
+                statement = statement.replace(
+                    copyStatement, copyStatement.toLowerCase());
             }
 
             resultStatements.add(statement);
         }
-
-        String lastContentStatements = targetStatements.getLast();
-
-        Pattern indexesPattern = Pattern.compile(
-            "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
-
-        Matcher indexesMatcher = indexesPattern.matcher(sourceStatement);
-
-        String delimiter = "--\n" + "-- PostgreSQL database dump complete";
-
-        while (indexesMatcher.find()) {
-            lastContentStatements = lastContentStatements.replace(
-                delimiter, indexesMatcher.group() + "\n\n" + delimiter
-            );
-        }
-
-        Pattern uniqueIndexesPattern = Pattern.compile(
-            "CREATE\\s+UNIQUE\\s+INDEX\\s+(\\w+)\\s+ON" +
-                    "\\s+public\\.(\\w+.*);");
-
-        Matcher uniqueIndexesMatcher =
-            uniqueIndexesPattern.matcher(sourceStatement);
-
-        while (uniqueIndexesMatcher.find()) {
-            lastContentStatements = lastContentStatements.replace(
-                delimiter, uniqueIndexesMatcher.group() + "\n\n" + delimiter
-            );
-        }
-
-        Pattern createRulesPattern = Pattern.compile(
-            "CREATE\\s+RULE\\s+[\\w\\s]+ AS[\\s\\S]*?WHERE\\s*\\([^;]*\\);");
-
-        Matcher createRulesMatcher = createRulesPattern.matcher(sourceStatement);
-
-        while (createRulesMatcher.find()) {
-            lastContentStatements = lastContentStatements.replace(
-                delimiter, createRulesMatcher.group() + "\n\n" + delimiter
-            );
-        }
-
-        resultStatements.add(lastContentStatements);
 
         return resultStatements;
     }
