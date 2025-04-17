@@ -83,7 +83,7 @@
     docker compose cp mysql|postgres:/[file-name-dump-with-timestamp.sql] [destination folder]
     ```
 
-7. Now, put both dumps (the customer dump in current database type, and the extracted dump from your bundle version) in the  `/src/main/resources/`
+7. Now, put both dumps (the customer dump converted by pentaho, and the extracted dump from your bundle version) in the  same directory.
 
 ## Build
 
