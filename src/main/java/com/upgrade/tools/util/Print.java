@@ -23,14 +23,14 @@ public class Print {
     }
 
     public static void replacement(
-            String oldContent, String newContent, Pattern pattern) {
+        String oldContent, String newContent, Pattern pattern) {
 
         System.out.println("Applying pattern " + pattern.pattern());
 
         System.out.println(
             "Replace\n" + _COLOR_LIGHT_BLUE + oldContent + _RESET +
-                    _BREAK_LINE + "By\n" + _COLOR_GREEN + newContent +
-                        _RESET + _DOUBLE_BREAK_LINE);
+                _BREAK_LINE + "By\n" + _COLOR_GREEN + newContent +
+                    _RESET + _DOUBLE_BREAK_LINE);
     }
 
     public static void warn(String describe, Exception cause) {
