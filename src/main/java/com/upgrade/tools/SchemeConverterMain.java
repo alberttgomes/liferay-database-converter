@@ -8,9 +8,11 @@ import com.upgrade.tools.util.ResultsThreadLocal;
 /**
  * @author Albert Gomes Cabral
  */
-public class Main {
+public class SchemeConverterMain {
 
     public static void main(String[] args) throws Exception {
+        long start = System.nanoTime();
+
         Params params = _getParams(args);
 
         if (params == null) {
@@ -26,7 +28,9 @@ public class Main {
             params.path, params.sourceFileName, params.targetFileName, params.newFileName);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
-            Print.info("Converted with success.");
+            Print.info(
+                "Converted with success. Completed in %d seconds"
+                        .formatted(start / 1000000000));
         }
         else {
             Print.error("Converter fail. Try again.");
