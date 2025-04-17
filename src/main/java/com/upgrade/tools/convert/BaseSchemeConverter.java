@@ -1,6 +1,5 @@
 package com.upgrade.tools.convert;
 
-import com.upgrade.tools.convert.constants.SchemeConverterSupportedTypes;
 import com.upgrade.tools.exception.ConverterException;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
@@ -21,6 +20,12 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
     protected abstract String getDatabaseType();
 
+    protected String beforeProcess(
+        String content, String sourceStatement) {
+
+        return content;
+    }
+
     protected List<String> postProcess(
         List<String> contents, String sourceContent) {
 
@@ -29,18 +34,16 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
     @Override
     public void converter(
-            String sourceName, String targetName, String newName)
+            String path, String sourceName, String targetName, String newName)
         throws ConverterException {
 
         try {
-            List<Map<String, List<String>>> contentMapList = _readFiles(
-                sourceName, targetName);
+            Map<String, List<String>> contentsMap = _readFiles(path, sourceName, targetName);
 
-            String sourceContent = String.valueOf(
-                contentMapList.getFirst().get("source.key"));
+            String sourceContent =
+                String.valueOf(contentsMap.get("source.content").getFirst());
 
-            List<String> targetContentChunks =
-                contentMapList.get(1).get("target.key");
+            List<String> targetContentChunks = contentsMap.get("target.content");
 
             List<String> resultTargetContentChunks =
                 new ArrayList<>(targetContentChunks.size());
@@ -78,18 +81,19 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                 if (tableNameSource.equalsIgnoreCase(tableNameTarget)) {
                     Print.info(String.format("Converting table %s", tableNameSource));
 
-                    targetContent = targetContent.replaceAll(tableNameTarget, tableNameSource);
+                    targetContent = targetContent.replaceAll(
+                        tableNameTarget, tableNameSource);
 
                     String columnsSource = matcherSource.group(2);
                     String columnsTarget = matcherTarget.group(2);
 
-                    String convertedColumns = _getColumns(columnsSource, columnsTarget);
+                    String convertedColumns =
+                        _getConvertedColumns(columnsSource, columnsTarget);
 
-                    targetContent = targetContent.replace(columnsTarget, convertedColumns);
+                    targetContent = targetContent.replace(
+                        columnsTarget, convertedColumns);
 
-                    if (getDatabaseType().equals(SchemeConverterSupportedTypes.MYSQL)) {
-                        targetContent = _mysqlConstraints(convertedColumns, columnsSource);
-                    }
+                    targetContent = beforeProcess(targetContent, sourceContent);
 
                     Print.replacement(columnsTarget, convertedColumns, pattern);
                 }
@@ -97,16 +101,6 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         }
 
         return targetContent;
-    }
-
-    private Map<String, List<String>> _buildMapItem(
-        String key, List<String> values) {
-
-        Map<String, List<String>> itemMap = new HashMap<>();
-
-        itemMap.put(key, values);
-
-        return itemMap;
     }
 
     private String _concat(String value, int index, int size) {
@@ -165,7 +159,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         return sb.toString();
     }
 
-    private String _getColumns(String sourceColumns, String targetColumns) {
+    private String _getConvertedColumns(String sourceColumns, String targetColumns) {
         return _formatColumns(
             _verifyExistsCustomColumns(sourceColumns, targetColumns),
             targetColumns);
@@ -185,23 +179,6 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         return columns;
     }
 
-    private String _mysqlConstraints(String columns, String constraints) {
-        Pattern pattern = Pattern.compile("PRIMARY\\s+KEY\\s+(.+)(\\s*.*)+");
-
-        Matcher matcher = pattern.matcher(constraints);
-
-        StringBuilder sb = new StringBuilder();
-
-        if (matcher.find()) {
-            sb.append(columns);
-            sb.append("\n");
-            sb.append("  ");
-            sb.append(matcher.group());
-        }
-
-        return sb.toString();
-    }
-
     private Map<String, List<String>> _readContentMap(
         InputStream source, InputStream target) throws IOException {
 
@@ -212,7 +189,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             Collections.singletonList(
                 SchemeConverterUtil.readContent(source)));
 
-        // Avoid OutOfMemoryError reading large data as chunks mode
+        // avoid OutOfMemoryError loading on memory large data as chunks mode
         contentMap.put(
             "target.content",
             SchemeConverterUtil.readChunks(target, 120000, Integer.MAX_VALUE));
@@ -220,41 +197,24 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         return contentMap;
     }
 
-    private List<Map<String, List<String>>> _readFiles(String sourceName, String targetName)
-        throws RuntimeException {
+    private Map<String, List<String>> _readFiles(
+        String path, String sourceName, String targetName) throws RuntimeException {
 
         try {
             if (!sourceName.endsWith(_VALID_EXTENSION) || !targetName.endsWith(_VALID_EXTENSION)) {
-                throw new Exception("Extension file must ends " + _VALID_EXTENSION);
+                throw new Exception("File extension must ends with " + _VALID_EXTENSION);
             }
 
-            Thread thread = Thread.currentThread();
+            InputStream sourceInputStream = new FileInputStream(path + sourceName);
 
-            ClassLoader classLoader = thread.getContextClassLoader();
+            InputStream targetInputStream = new FileInputStream(path + targetName);
 
-            InputStream sourceInputStream = classLoader.getResourceAsStream(sourceName);
-
-            InputStream targetInputStream = classLoader.getResourceAsStream(targetName);
-
-            if (Objects.isNull(sourceInputStream)) {
-                throw new RuntimeException("Source file not found " + sourceName);
+            if (sourceInputStream.read() <= 0 || targetInputStream.read() <= 0) {
+                throw new RuntimeException(
+                    "Cannot find files in directory");
             }
-            else if (Objects.isNull(targetInputStream)) {
-                throw new RuntimeException("Target file not found %s" +targetName);
-            }
-            else {
-                Map<String, List<String>> contentsMap = _readContentMap(
-                    sourceInputStream, targetInputStream);
 
-                List<Map<String, List<String>>> contentMapList = new ArrayList<>(2);
-
-                contentMapList.add(
-                    _buildMapItem("source.key", contentsMap.get("source.content")));
-                contentMapList.add(
-                    _buildMapItem("target.key", contentsMap.get("target.content")));
-
-                return contentMapList;
-            }
+            return _readContentMap(sourceInputStream, targetInputStream);
         }
         catch (Exception exception) {
             throw new RuntimeException(exception);
@@ -269,7 +229,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         // Crete new columns based on source file
         Set<String> newColumns = new HashSet<>(sourceColumnsSet);
 
-        // Check if existing custom columns to keep
+        // Check if exists custom columns to set in newColumns Set<String> type
         targetColumnsSet.forEach(
             (column) -> {
                 Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
