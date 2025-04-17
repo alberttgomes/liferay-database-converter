@@ -6,7 +6,7 @@ package com.upgrade.tools.convert;
 public interface SchemeConverter {
 
     void converter(
-            String sourceName, String targetName, String newName)
+            String path, String sourceName, String targetName, String newName)
         throws Exception;
 
 }
