@@ -16,7 +16,9 @@ public class SchemeConverterMain {
         Params params = _getParams(args);
 
         if (params == null) {
-            throw new RuntimeException("Invalid arguments");
+            throw new RuntimeException(
+                "Is mandatory to inform valid arguments to use the converter. \n" +
+                    "Use -h to see the usage.");
         }
 
         SchemeConverter schemeConverter = SchemeConverterInitialize.getConverterType(
@@ -30,7 +32,7 @@ public class SchemeConverterMain {
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             Print.info(
                 "Converted with success. Completed in %d seconds"
-                        .formatted(start / 1000000000));
+                    .formatted(System.nanoTime() - start));
         }
         else {
             Print.error("Converter fail. Try again.");
