@@ -1,4 +1,4 @@
-package com.upgrade.tools.converter.constants;
+package com.upgrade.tools.constants;
 
 /**
  * @author Albert Gomes Cabral

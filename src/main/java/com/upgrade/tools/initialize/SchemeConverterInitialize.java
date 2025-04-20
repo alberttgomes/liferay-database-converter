@@ -1,7 +1,7 @@
 package com.upgrade.tools.initialize;
 
 import com.upgrade.tools.converter.MySQLSchemeConverter;
-import com.upgrade.tools.converter.constants.SchemeConverterSupportType;
+import com.upgrade.tools.constants.SchemeConverterSupportType;
 import com.upgrade.tools.converter.PostGreSQLSchemeConverter;
 import com.upgrade.tools.converter.SchemeConverter;
 import com.upgrade.tools.exception.ConverterException;

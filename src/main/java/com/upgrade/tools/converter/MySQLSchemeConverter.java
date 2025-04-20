@@ -1,6 +1,6 @@
 package com.upgrade.tools.converter;
 
-import com.upgrade.tools.converter.constants.SchemeConverterSupportType;
+import com.upgrade.tools.constants.SchemeConverterSupportType;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

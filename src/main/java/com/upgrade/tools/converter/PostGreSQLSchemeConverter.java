@@ -1,6 +1,6 @@
 package com.upgrade.tools.converter;
 
-import com.upgrade.tools.converter.constants.SchemeConverterSupportType;
+import com.upgrade.tools.constants.SchemeConverterSupportType;
 import com.upgrade.tools.util.Print;
 
 import java.util.ArrayList;
