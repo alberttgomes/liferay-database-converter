@@ -1,6 +1,6 @@
 package com.upgrade.tools;
 
-import com.upgrade.tools.convert.SchemeConverter;
+import com.upgrade.tools.converter.SchemeConverter;
 import com.upgrade.tools.initialize.SchemeConverterInitialize;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;

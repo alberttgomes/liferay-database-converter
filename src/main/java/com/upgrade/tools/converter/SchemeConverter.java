@@ -1,4 +1,4 @@
-package com.upgrade.tools.convert;
+package com.upgrade.tools.converter;
 
 /**
  * @author Albert Gomes Cabral
