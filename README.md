@@ -1,4 +1,4 @@
-# How to use App to fix Column Issues
+# How to use the App to fix Column Issues
 
 ## Requirements:
 - Java 21
@@ -11,11 +11,11 @@
    
    a. ``./gradlew initBundle``
 
-   b. deploy all custom modules, and make sure that are in 'bundles/osgi/modules'
+   b. Deploy all custom modules, and make sure that they are in 'bundles/osgi/modules'
 
-2. Create a MySQL|PostgresSQL Docker image using customer workspace:
+2. Create a MySQL|PostgreSQL Docker image using the customer workspace:
 
-   a. Create a docker service to postgresSQL, should be something like:
+   a. Create a Docker service for PostgreSQL, something like:
 
       ```
       database:
@@ -32,7 +32,7 @@
          ports:
            - "[PORT]:5432"
       ```
-      > You can follow the something similar to MySQL
+      > You can follow something similar to MySQL
 
 3. Spin up Docker database service:
    
@@ -40,7 +40,7 @@
    docker compose up --build [DATABASE-SERVICE-NAME] -d
    ```
 
-4. In your database properties, replace to the new database scheme.  
+4. In your database properties, replace the new database scheme.  
     MySQL:
     ```
     jdbc.default.driverClassName=com.mysql.cj.jdbc.Driver
@@ -48,7 +48,7 @@
     jdbc.default.username=[CUSTOMER_USER_NAME]
     jdbc.default.password=[CUSTOMER_PASSWORD]
     ```
-    PostgresSQL: 
+    PostgreSQL: 
     ```
     jdbc.default.driverClassName=org.postgresql.Driver
     jdbc.default.url=jdbc:postgresql://[DOMAIN]:5432/[CUSTOMER_SCHEME_NAME]
@@ -57,14 +57,14 @@
     ```
    
    Note
-   > These configuration can be in Liferay's Docker service as environment variables
+   > These configurations can be in Liferay's Docker service as environment variables
 
-5. Start customer portal using docker or catalina, and taken the Liferay create the database scheme in 'PostGreSQL/MySQL'
+5. Start the customer portal using Docker or Catalina, and take the Liferay database scheme in 'PostgreSQL/MySQL'
 
-6. After starting the portal, go to the docker container and extract a dump file:
-   -  Go to docker container:
+6. After starting the portal, go to the Docker container and extract a dump file:
+   -  Go to Docker container:
     ```
-    docker compose exec mysql|postgres bash
+    docker compose exec mysql|postgresql bash
     ```
     - Run the following command to generate a dump
        
@@ -72,7 +72,7 @@
     ```
     mysqldump -u [CUSTOMER_USER_NAME] -p[CUSTOMER_PASSWORD] [CUSTOMER_SCHEME_NAME] > [file-name-dump-with-timestamp.sql]
     ```
-    PostgresSQL:
+    PostgreSQL:
     ```
     pg_dump -U [CUSTOMER_USER_NAME] -d [CUSTOMER_SCHEME_NAME] -f [file-name-dump-with-timestamp.sql]
     ```  
@@ -83,7 +83,7 @@
     docker compose cp mysql|postgres:/[file-name-dump-with-timestamp.sql] [destination folder]
     ```
 
-7. Now, put both dumps (the customer dump converted by pentaho, and the extracted dump from your bundle version) in the  same directory.
+7. Put both dumps (the customer dump converted by Pentaho and the extracted dump from your bundle version) in the  same directory.
 
 ## Build
 
@@ -95,10 +95,10 @@
 
 - Flags: 
 ```
--d --database-type    to reference the database will be converted (must be **postgres|mysql**)
+-d --database-type    to reference the database will be converted (must be **postgresql|mysql**)
 -p --path             to reference the path where the files are located
 -sf --source-file     to reference the source file name
--tf --target-file     to refrecne the target file name
+-tf --target-file     to reference the target file name
 ```
 
 ## Run
@@ -108,4 +108,4 @@ java -jar build/libs/liferay-database-migrate-tools-[current-version]-SNAPSHOT.j
 ```
 
 ### Note
-> This application will fix column and constraints issues when using the Pentaho tool.
+> This application will fix column and constraint issues using the Pentaho tool.
