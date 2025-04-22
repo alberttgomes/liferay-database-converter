@@ -163,7 +163,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
     private String _getConvertedColumns(String sourceColumns, String targetColumns) {
         return _formatColumns(
-            _verifyExistsCustomColumns(sourceColumns, targetColumns),
+            _newColumnsResults(sourceColumns, targetColumns),
             targetColumns);
     }
 
@@ -181,57 +181,14 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         return columns;
     }
 
-    private Map<String, List<String>> _readContentMap(
-        InputStream source, InputStream target) throws IOException {
-
-        Map<String, List<String>> contentMap = new HashMap<>();
-
-        contentMap.put(
-            "source.content",
-            Collections.singletonList(
-                SchemeConverterUtil.readContent(source)));
-
-        // avoid OutOfMemoryError loading on memory large data as chunks mode
-        contentMap.put(
-            "target.content",
-            SchemeConverterUtil.readChunks(target, 120000, Integer.MAX_VALUE));
-
-        return contentMap;
-    }
-
-    private Map<String, List<String>> _readFiles(
-        String path, String sourceName, String targetName) throws RuntimeException {
-
-        try {
-            if (!sourceName.endsWith(_VALID_EXTENSION) || !targetName.endsWith(_VALID_EXTENSION)) {
-                throw new Exception("File extension must ends with " + _VALID_EXTENSION);
-            }
-
-            InputStream sourceInputStream = new FileInputStream(path + sourceName);
-
-            InputStream targetInputStream = new FileInputStream(path + targetName);
-
-            if (sourceInputStream.read() <= 0 || targetInputStream.read() <= 0) {
-                throw new RuntimeException(
-                    "Cannot find files in directory");
-            }
-
-            return _readContentMap(sourceInputStream, targetInputStream);
-        }
-        catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
-
-    }
-
-    private Set<String> _verifyExistsCustomColumns(String sourceColumns, String targetColumns) {
+    private Set<String> _newColumnsResults(String sourceColumns, String targetColumns) {
         Set<String> sourceColumnsSet = _getColumnsSet(sourceColumns);
         Set<String> targetColumnsSet = _getColumnsSet(targetColumns);
 
-        // Crete new columns based on source file
         Set<String> newColumns = new HashSet<>(sourceColumnsSet);
 
-        // Check if exists custom columns to set in newColumns Set<String> type
+        // Checking if exists custom columns to set as part the new columns set
+
         targetColumnsSet.forEach(
             (column) -> {
                 Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
@@ -253,6 +210,47 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         );
 
         return newColumns;
+    }
+
+    private Map<String, List<String>> _readContentMap(
+        InputStream source, InputStream target) throws IOException {
+
+        Map<String, List<String>> contentMap = new HashMap<>();
+
+        contentMap.put(
+            "source.content",
+            Collections.singletonList(
+                SchemeConverterUtil.readContent(source)));
+
+        contentMap.put(
+            "target.content",
+            SchemeConverterUtil.readChunks(target, 120000, Integer.MAX_VALUE));
+
+        return contentMap;
+    }
+
+    private Map<String, List<String>> _readFiles(
+        String path, String sourceName, String targetName) throws RuntimeException {
+
+        try {
+            if (!sourceName.endsWith(_VALID_EXTENSION) || !targetName.endsWith(_VALID_EXTENSION)) {
+                throw new Exception("File extension must ends with " + _VALID_EXTENSION);
+            }
+
+            InputStream sourceInputStream = new FileInputStream(path + sourceName);
+
+            InputStream targetInputStream = new FileInputStream(path + targetName);
+
+            if (sourceInputStream.read() <= 0 || targetInputStream.read() <= 0) {
+                throw new RuntimeException("Cannot find files in directory");
+            }
+
+            return _readContentMap(sourceInputStream, targetInputStream);
+        }
+        catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+
     }
 
     private void _writerResult(
