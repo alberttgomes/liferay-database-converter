@@ -41,8 +41,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             Map<String, List<String>> contentsMap =
                 _readFiles(path, sourceName, targetName);
 
-            String sourceContent =
-                String.valueOf(contentsMap.get("source.content").getFirst());
+            String sourceContent = contentsMap.get("source.content").getFirst();
 
             List<String> targetContentChunks = contentsMap.get("target.content");
 
@@ -51,7 +50,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
             for (String targetContent : targetContentChunks) {
                 for (Pattern pattern : getContextPattern()) {
-                    targetContent = converterContextPattern(
+                    targetContent = _converterContextPattern(
                         sourceContent, targetContent, pattern);
 
                     resultTargetContentChunks.add(targetContent);
@@ -68,8 +67,17 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
 
     }
 
-    protected String converterContextPattern(
-        String sourceContent, String targetContent, Pattern pattern) {
+    private String _concat(String value, int index, int size) {
+        if (index == size) {
+            return value;
+        }
+        else {
+            return value + ",";
+        }
+    }
+
+    private String _converterContextPattern(
+            String sourceContent, String targetContent, Pattern pattern) {
 
         Matcher matcherTarget = pattern.matcher(targetContent);
 
@@ -84,16 +92,16 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                     Print.info(String.format("Converting table %s", tableNameSource));
 
                     targetContent = targetContent.replaceAll(
-                        tableNameTarget, tableNameSource);
+                            tableNameTarget, tableNameSource);
 
                     String columnsSource = matcherSource.group(2);
                     String columnsTarget = matcherTarget.group(2);
 
                     String convertedColumns =
-                        _getConvertedColumns(columnsSource, columnsTarget);
+                            _getConvertedColumns(columnsSource, columnsTarget);
 
                     targetContent = targetContent.replace(
-                        columnsTarget, convertedColumns);
+                            columnsTarget, convertedColumns);
 
                     targetContent = beforeProcess(targetContent, sourceContent);
 
@@ -103,15 +111,6 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         }
 
         return targetContent;
-    }
-
-    private String _concat(String value, int index, int size) {
-        if (index == size) {
-            return value;
-        }
-        else {
-            return value + ",";
-        }
     }
 
     private String _extractColumnName(String column) {
