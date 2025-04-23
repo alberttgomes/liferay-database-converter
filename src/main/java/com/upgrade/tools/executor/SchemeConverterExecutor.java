@@ -2,6 +2,8 @@ package com.upgrade.tools.executor;
 
 import com.upgrade.tools.converter.SchemeConverter;
 import com.upgrade.tools.initialize.SchemeConverterInitialize;
+import com.upgrade.tools.util.Print;
+import com.upgrade.tools.util.ResultsThreadLocal;
 
 /**
  * @author Albert Gomes Cabral
@@ -9,19 +11,36 @@ import com.upgrade.tools.initialize.SchemeConverterInitialize;
 public class SchemeConverterExecutor {
 
     public static void executor(String[] args) throws Exception {
+        if (args.length == 1 && args[0].equals("--help")) {
+            System.out.println(_helper());
+
+            return;
+        }
+
         Params params = _getParams(args);
 
         if (params == null) {
             throw new RuntimeException(
                 "Is mandatory to inform valid arguments to use the converter. \n" +
-                        "Use -h to see the usage.");
+                        "Use --help to see the usage.");
         }
 
+        long start = System.nanoTime();
+
         SchemeConverter schemeConverter = SchemeConverterInitialize.getConverterType(
-                params.databaseType);
+            params.databaseType);
 
         schemeConverter.converter(
             params.path, params.sourceFileName, params.targetFileName, params.newFileName);
+
+        if (ResultsThreadLocal.getResultsThreadLocal()) {
+            Print.info(
+                "Converted with success. Completed in %d seconds"
+                    .formatted(System.nanoTime() - start / 1_000_000_000));
+        }
+        else {
+            Print.error("Converter fail. Try again.");
+        }
     }
 
     private static Params _getParams(String[] args) {
@@ -60,6 +79,29 @@ public class SchemeConverterExecutor {
         }
 
         return params;
+    }
+
+    private static String _helper() {
+
+        return """
+                See scheme converter usages:\s
+                 \
+                
+                --database-type or -d\s
+                \t the database type target\s
+                
+                --path or -p\s
+                \t the absolut path to database dump files\s
+                
+                -sf or --source-file\s
+                \t the source file name that contains Liferay's scheme with target specifications\s
+                
+                --new-file or -nf\s
+                \t the output file name that contains the converted dump\s
+                
+                --target-file or -tf\s
+                \t the target file name that contains customer data\s
+                """;
     }
 
     private static class Params {
