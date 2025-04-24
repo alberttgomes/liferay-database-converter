@@ -82,26 +82,25 @@ public class SchemeConverterExecutor {
     }
 
     private static String _helper() {
-
         return """
-                See scheme converter usages:\s
-                 \
-                
-                --database-type or -d\s
-                \t the database type target\s
-                
-                --path or -p\s
-                \t the absolut path to database dump files\s
-                
-                -sf or --source-file\s
-                \t the source file name that contains Liferay's scheme with target specifications\s
-                
-                --new-file or -nf\s
-                \t the output file name that contains the converted dump\s
-                
-                --target-file or -tf\s
-                \t the target file name that contains customer data\s
-                """;
+            See scheme converter usages:\s
+             \
+            
+            --database-type or -d\s
+            \t the database type target\s
+            
+            --path or -p\s
+            \t the absolut path to database dump files\s
+            
+            -sf or --source-file\s
+            \t the source file name that contains Liferay's scheme with target specifications\s
+            
+            --new-file or -nf\s
+            \t the output file name that contains the converted dump\s
+            
+            --target-file or -tf\s
+            \t the target file name that contains customer data\s
+            """;
     }
 
     private static class Params {

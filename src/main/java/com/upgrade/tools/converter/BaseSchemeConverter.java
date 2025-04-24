@@ -241,7 +241,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             InputStream targetInputStream = new FileInputStream(path + targetName);
 
             if (sourceInputStream.read() <= 0 || targetInputStream.read() <= 0) {
-                throw new RuntimeException("Cannot find files in directory");
+                throw new RuntimeException("File content cannot be empty");
             }
 
             return _readContentMap(sourceInputStream, targetInputStream);
