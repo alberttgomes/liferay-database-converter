@@ -3,10 +3,12 @@ package com.upgrade.tools.converter;
 import com.upgrade.tools.exception.ConverterException;
 import com.upgrade.tools.executor.SchemeConverterExecutor;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Objects;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -34,11 +36,6 @@ public class TestSchemeConverterPostGreSQL {
 
         Assertions.assertEquals(
             targetContent, newConvertedContent, "failed");
-    }
-
-    @Test
-    public void testSchemeConverterCopyAndRuleStatement() throws Exception {
-
     }
 
     @Test
@@ -82,6 +79,15 @@ public class TestSchemeConverterPostGreSQL {
         );
     }
 
+    @AfterAll
+    public static void cleanUp() {
+        String path = _basePath + "column-definitions/";
+
+        File file = new File(path + "new-create-table-statement.sql");
+
+        System.out.printf("Clean up %s%n", file.delete());
+    }
+
     private String _readContent(String path, String fileName) throws Exception {
         InputStream inputStream = new FileInputStream(path + fileName);
 
@@ -89,7 +95,7 @@ public class TestSchemeConverterPostGreSQL {
             Objects.requireNonNull(inputStream).readAllBytes());
     }
 
-    private final String _basePath =
+    private static final String _basePath =
         System.getProperty("user.dir") + "/src/test/resources/";
 
 }

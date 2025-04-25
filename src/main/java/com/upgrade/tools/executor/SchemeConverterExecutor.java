@@ -21,8 +21,8 @@ public class SchemeConverterExecutor {
 
         if (params == null) {
             throw new RuntimeException(
-                "Is mandatory to inform valid arguments to use the converter. \n" +
-                        "Use --help to see the usage.");
+                "Is mandatory to inform valid arguments to execute it. \n" +
+                        "Type --help to see the usage");
         }
 
         long start = System.nanoTime();

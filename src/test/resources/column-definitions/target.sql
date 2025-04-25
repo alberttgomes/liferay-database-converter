@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.testaccountentry (
     externalreferencecode character varying(75),
-    accountentryid bigint NOT NULL,
+    accountentryid bigint,
     companyid bigint,
     userid bigint,
     username character varying(75),
@@ -58,17 +58,17 @@ CREATE TABLE public.testaccountentry (
 --
 
 CREATE TABLE public.testbatchengineexporttask (
-    mvccversion bigint DEFAULT 0 NOT NULL,
+    mvccversion bigint,
     uuid_ character varying(75),
     externalreferencecode character varying(75),
-    batchengineexporttaskid bigint NOT NULL,
+    batchengineexporttaskid bigint,
     companyid bigint,
     userid bigint,
     createdate timestamp without time zone,
     modifieddate timestamp without time zone,
     callbackurl character varying(255),
     classname character varying(255),
-    content oid,
+    content unknown,
     contenttype character varying(75),
     endtime timestamp without time zone,
     errormessage unknown,
@@ -90,9 +90,9 @@ CREATE TABLE public.testbatchengineexporttask (
 --
 
 CREATE TABLE public.testdlcontent (
-    mvccversion bigint DEFAULT 0 NOT NULL,
-    ctcollectionid bigint DEFAULT 0 NOT NULL,
-    contentid bigint NOT NULL,
+    mvccversion bigint,
+    ctcollectionid bigint,
+    contentid bigint,
     groupid bigint,
     companyid bigint,
     repositoryid bigint,
@@ -107,9 +107,9 @@ CREATE TABLE public.testdlcontent (
 --
 
 CREATE TABLE public.testquartz_blob_triggers (
-    sched_name character varying(120) NOT NULL,
-    "TRIGGER_NAME" character varying(200) NOT NULL,
-    trigger_group character varying(200) NOT NULL,
+    sched_name character varying(120),
+    "TRIGGER_NAME" character varying(200),
+    trigger_group character varying(200),
     blob_data bytea
 );
 
@@ -118,11 +118,11 @@ CREATE TABLE public.testquartz_blob_triggers (
 --
 
 CREATE TABLE public.testsegmentsentry (
-    ctcollectionid bigint DEFAULT 0 NOT NULL,
+    ctcollectionid bigint,
     uuid_ character varying(75),
     groupid bigint,
     companyid bigint,
-    segmentsentryid bigint NOT NULL,
+    segmentsentryid bigint,
     userid bigint,
     username character varying(75),
     createdate timestamp without time zone,
@@ -133,7 +133,7 @@ CREATE TABLE public.testsegmentsentry (
     active_ smallint,
     criteria text,
     source character varying(75),
-    mvccversion bigint DEFAULT 0 NOT NULL,
+    mvccversion bigint,
     lastpublishdate timestamp without time zone
 );
 
