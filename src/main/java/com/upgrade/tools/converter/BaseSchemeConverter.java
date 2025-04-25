@@ -77,7 +77,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
     }
 
     private String _converterContextPattern(
-            String sourceContent, String targetContent, Pattern pattern) {
+        String sourceContent, String targetContent, Pattern pattern) {
 
         Matcher matcherTarget = pattern.matcher(targetContent);
 
@@ -89,21 +89,19 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                 String tableNameTarget = matcherTarget.group(1);
 
                 if (tableNameSource.equalsIgnoreCase(tableNameTarget)) {
-                    Print.info(String.format("Converting table %s", tableNameSource));
+                    Print.info(String.format("Converting %s table", tableNameSource));
 
-                    targetContent = targetContent.replaceAll(
-                            tableNameTarget, tableNameSource);
+                    targetContent =
+                        targetContent.replaceAll(tableNameTarget, tableNameSource);
 
                     String columnsSource = matcherSource.group(2);
                     String columnsTarget = matcherTarget.group(2);
 
                     String convertedColumns =
-                            _getConvertedColumns(columnsSource, columnsTarget);
+                        _getConvertedColumns(columnsSource, columnsTarget);
 
                     targetContent = targetContent.replace(
-                            columnsTarget, convertedColumns);
-
-                    targetContent = beforeProcess(targetContent, sourceContent);
+                        columnsTarget, beforeProcess(convertedColumns, sourceContent));
 
                     Print.replacement(columnsTarget, convertedColumns, pattern);
                 }
@@ -185,8 +183,6 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         Set<String> targetColumnsSet = _getColumnsSet(targetColumns);
 
         Set<String> newColumns = new HashSet<>(sourceColumnsSet);
-
-        // Checking if exists custom columns to set as part the new columns set
 
         targetColumnsSet.forEach(
             (column) -> {

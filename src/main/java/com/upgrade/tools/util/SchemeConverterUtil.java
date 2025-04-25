@@ -43,6 +43,8 @@ public class SchemeConverterUtil {
             int count = 0;
             int countChunks = 0;
 
+            chunkBuilder.append("-");
+
             while ((line = bufferedReader.readLine()) != null) {
                 chunkBuilder.append(line).append("\n");
                 count++;
