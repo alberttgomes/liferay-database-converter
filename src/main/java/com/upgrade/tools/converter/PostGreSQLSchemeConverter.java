@@ -31,9 +31,6 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
     private List<String> _postProcess(
         List<String> targetStatements, String sourceStatement) {
 
-        Print.info(String.format(
-            "Executing post process to %s database", getDatabaseType()));
-
         List<String> resultStatements = _attributesTransform(targetStatements);
 
         resultStatements.add(
@@ -121,7 +118,8 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
     }
 
     private final Pattern _TABLE_NAME_PATTERN = Pattern.compile(
-        "CREATE\\s+TABLE\\s+(?:public\\.)?([a-zA-Z_0-9]+)\\s*\\(([^)]*?(\\([^)]*\\)[^)]*?)*)\\);",
+        "CREATE\\s+TABLE\\s+(?:public\\.)?([a-zA-Z_0-9]+)\\s*" +
+                "\\(([^)]*?(\\([^)]*\\)[^)]*?)*)\\);",
         Pattern.DOTALL);
 
 }
