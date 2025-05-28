@@ -5,6 +5,10 @@ import com.upgrade.tools.initialize.SchemeConverterInitialize;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Albert Gomes Cabral
  */
@@ -31,7 +35,7 @@ public class SchemeConverterExecutor {
             params.databaseType);
 
         schemeConverter.converter(
-            params.path, params.sourceFileName, params.targetFileName, params.newFileName);
+            params.path, params.sourceFileName, params.targetFileName, params.newFileName, params.indexesName);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             Print.info(
@@ -75,6 +79,15 @@ public class SchemeConverterExecutor {
                 case "-nf":
                     params.newFileName = args[i + 1];
                     break;
+                case "--index-name":
+                case "-in":
+                    String indexes = args[i + 1];
+
+                    String[] indexNameScratchSplit = indexes.split(",");
+
+                    Collections.addAll(params.indexesName, indexNameScratchSplit);
+
+                    break;
             }
         }
 
@@ -100,6 +113,9 @@ public class SchemeConverterExecutor {
             
             --target-file or -tf\s
             \t the target file name that contains customer data\s
+
+            --index-name or -in\s
+            \t the unique index(es) to be skipped\s
             """;
     }
 
@@ -114,6 +130,8 @@ public class SchemeConverterExecutor {
         public String sourceFileName;
 
         public String targetFileName;
+
+        public List<String> indexesName = new ArrayList();
 
     }
 
