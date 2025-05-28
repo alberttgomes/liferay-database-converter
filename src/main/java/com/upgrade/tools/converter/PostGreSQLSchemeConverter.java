@@ -24,22 +24,22 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
     }
 
     @Override
-    protected List<String> postProcess(List<String> contents, String sourceContent) {
-        return _postProcess(contents, sourceContent);
+    protected List<String> postProcess(List<String> contents, String sourceContent, List<String> indexesName) {
+        return _postProcess(contents, sourceContent, indexesName);
     }
 
     private List<String> _postProcess(
-        List<String> targetStatements, String sourceStatement) {
+            List<String> targetStatements, String sourceStatement, List<String> indexesName) {
 
         List<String> resultStatements = _attributesTransform(targetStatements);
 
         resultStatements.add(
-            _addIndexesAndRules(targetStatements.getLast(), sourceStatement));
+            _addIndexesAndRules(targetStatements.getLast(), sourceStatement, indexesName));
 
         return resultStatements;
     }
 
-    private String _addIndexesAndRules(String lasContent, String sourceStatement) {
+    private String _addIndexesAndRules(String lasContent, String sourceStatement, List<String> indexesName) {
         Pattern indexesPattern = Pattern.compile(
             "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
 
@@ -61,8 +61,16 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
             uniqueIndexesPattern.matcher(sourceStatement);
 
         while (uniqueIndexesMatcher.find()) {
+
+            if (!indexesName.isEmpty()){
+                String sourceUniqueIndexMatcher = uniqueIndexesMatcher.group(1);
+                if (indexesName.contains(sourceUniqueIndexMatcher)) {
+                    continue;
+                }
+            }
+
             lasContent = lasContent.replace(
-                delimiter, uniqueIndexesMatcher.group() + "\n\n" + delimiter
+                    delimiter, uniqueIndexesMatcher.group() + "\n\n" + delimiter
             );
         }
 
