@@ -96,6 +96,7 @@
 - Flags: 
 ```
 -d --database-type    to reference the database will be converted (must be **postgresql|mysql**)
+-in --index-name      to reference the unique index(es) to skip
 -p --path             to reference the path where the files are located
 -sf --source-file     to reference the source file name
 -tf --target-file     to reference the target file name
@@ -104,7 +105,7 @@
 ## Run
 
 ``` 
-java -jar build/libs/liferay-database-migrate-tools-[current-version]-SNAPSHOT.jar -d [DATABASE-TYPE] -p [FULL-DIRECTORY-FILES-ARE-ALOCATED] -sf [SOURCE-FILE].sql -tf [TARGET-FILE].sql -nf [NEW-DUMP-NAME].sql
+java -jar build/libs/liferay-database-migrate-tools-[current-version]-SNAPSHOT.jar -d [DATABASE-TYPE] -in [Index(es)](Optional flag) -p [FULL-DIRECTORY-FILES-ARE-ALOCATED] -sf [SOURCE-FILE].sql -tf [TARGET-FILE].sql -nf [NEW-DUMP-NAME].sql
 ```
 
 ### Note
