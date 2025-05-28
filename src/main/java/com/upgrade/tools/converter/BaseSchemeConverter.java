@@ -26,15 +26,14 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         return content;
     }
 
-    protected List<String> postProcess(
-        List<String> contents, String sourceContent) {
+    protected List<String> postProcess(List<String> contents, String sourceContent, List<String> indexesName) {
 
         return contents;
     }
 
     @Override
     public void converter(
-            String path, String sourceName, String targetName, String newName)
+            String path, String sourceName, String targetName, String newName, List<String> indexesName)
         throws ConverterException {
 
         try {
@@ -58,7 +57,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             }
 
             _writerResult(
-                postProcess(resultTargetContentChunks, sourceContent),
+                postProcess(resultTargetContentChunks, sourceContent, indexesName),
                 path, newName);
         }
         catch (Exception exception) {
