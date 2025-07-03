@@ -34,18 +34,31 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
         List<String> resultStatements = _attributesTransform(targetStatements);
 
         resultStatements.add(
-            _addIndexesAndRules(targetStatements.getLast(), sourceStatement, indexesName));
+            _addIndexesRulesAndAlterTable(targetStatements.getLast(), sourceStatement, indexesName));
 
         return resultStatements;
     }
 
-    private String _addIndexesAndRules(String lasContent, String sourceStatement, List<String> indexesName) {
+    private String _addIndexesRulesAndAlterTable(
+        String lasContent, String sourceStatement, List<String> indexesName) {
+
+        Pattern alterTableOnly = Pattern.compile(
+            "ALTER TABLE ONLY\\s+public\\.(?!\\w+_x_\\d+)\\w+\\s+ADD CONSTRAINT\\s+.*?PRIMARY KEY\\s*\\(.*?\\);\n");
+
+        Matcher alterTableOnlyMatcher = alterTableOnly.matcher(sourceStatement);
+
+        String delimiter = "--\n" + "-- PostgreSQL database dump complete";
+
+        while (alterTableOnlyMatcher.find()) {
+            lasContent = lasContent.replace(
+                delimiter, alterTableOnlyMatcher.group() + "\n" + delimiter
+            );
+        }
+
         Pattern indexesPattern = Pattern.compile(
             "CREATE\\s+INDEX\\s+(\\w+)\\s+ON\\s+public\\.(\\w+.*);");
 
         Matcher indexesMatcher = indexesPattern.matcher(sourceStatement);
-
-        String delimiter = "--\n" + "-- PostgreSQL database dump complete";
 
         while (indexesMatcher.find()) {
             lasContent = lasContent.replace(
@@ -64,13 +77,14 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
 
             if (!indexesName.isEmpty()){
                 String sourceUniqueIndexMatcher = uniqueIndexesMatcher.group(1);
+
                 if (indexesName.contains(sourceUniqueIndexMatcher)) {
                     continue;
                 }
             }
 
             lasContent = lasContent.replace(
-                    delimiter, uniqueIndexesMatcher.group() + "\n\n" + delimiter
+                delimiter, uniqueIndexesMatcher.group() + "\n\n" + delimiter
             );
         }
 
