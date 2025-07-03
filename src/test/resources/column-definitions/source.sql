@@ -137,6 +137,28 @@ CREATE TABLE public.testsegmentsentry (
     lastpublishdate timestamp without time zone
 );
 
+--
+-- Name: batchengineimporttask batchengineimporttask_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.batchengineimporttask
+    ADD CONSTRAINT batchengineimporttask_pkey PRIMARY KEY (batchengineimporttaskid);
+
+
+--
+-- Name: batchengineimporttaskerror batchengineimporttaskerror_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.batchengineimporttaskerror
+    ADD CONSTRAINT batchengineimporttaskerror_pkey PRIMARY KEY (batchengineimporttaskerrorid);
+
+
+--
+-- Name: batchplannermapping batchplannermapping_pkey; Type: CONSTRAINT; Schema: public; Owner: root
+--
+
+ALTER TABLE ONLY public.batchplannermapping
+    ADD CONSTRAINT batchplannermapping_pkey PRIMARY KEY (batchplannermappingid);
 
 --
 -- Name: ix_ffb3395c; Type: INDEX; Schema: public; Owner: scheme-converter

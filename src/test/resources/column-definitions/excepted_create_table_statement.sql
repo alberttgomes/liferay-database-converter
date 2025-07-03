@@ -138,6 +138,15 @@ CREATE TABLE public.testsegmentsentry (
 );
 
 
+ALTER TABLE ONLY public.batchengineimporttask
+    ADD CONSTRAINT batchengineimporttask_pkey PRIMARY KEY (batchengineimporttaskid);
+
+ALTER TABLE ONLY public.batchengineimporttaskerror
+    ADD CONSTRAINT batchengineimporttaskerror_pkey PRIMARY KEY (batchengineimporttaskerrorid);
+
+ALTER TABLE ONLY public.batchplannermapping
+    ADD CONSTRAINT batchplannermapping_pkey PRIMARY KEY (batchplannermappingid);
+
 CREATE INDEX ix_ff9d0743 ON public.testsegmentsentry USING btree (groupid, segmentsentrykey, uuid_);
 
 CREATE INDEX ix_ffb3395c ON public.testdlcontent USING btree (contentid);

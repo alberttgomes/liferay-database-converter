@@ -89,10 +89,13 @@ public class TestSchemeConverterPostGreSQL {
     }
 
     private String _readContent(String path, String fileName) throws Exception {
-        InputStream inputStream = new FileInputStream(path + fileName);
-
-        return new String(
-            Objects.requireNonNull(inputStream).readAllBytes());
+        try (InputStream inputStream = new FileInputStream(path + fileName)) {
+            return new String(
+                Objects.requireNonNull(inputStream).readAllBytes());
+        }
+        catch (Exception exception) {
+            throw new Exception(exception);
+        }
     }
 
     private static final String _basePath =
