@@ -16,7 +16,7 @@ public class SchemeConverterExecutor {
 
     public static void executor(String[] args) throws Exception {
         if (args.length == 1 && args[0].equals("--help")) {
-            System.out.println(_helper());
+            Print.info(_helper());
 
             return;
         }
@@ -35,7 +35,8 @@ public class SchemeConverterExecutor {
             params.databaseType);
 
         schemeConverter.converter(
-            params.path, params.sourceFileName, params.targetFileName, params.newFileName, params.indexesName);
+            params.path, params.sourceFileName, params.targetFileName, params.newFileName,
+            params.indexesName);
 
         if (ResultsThreadLocal.getResultsThreadLocal()) {
             Print.info(
@@ -120,7 +121,6 @@ public class SchemeConverterExecutor {
     }
 
     private static class Params {
-
         public String databaseType;
 
         public String path;
@@ -131,8 +131,7 @@ public class SchemeConverterExecutor {
 
         public String targetFileName;
 
-        public List<String> indexesName = new ArrayList();
-
+        public List<String> indexesName = new ArrayList<>();
     }
 
 }

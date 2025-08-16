@@ -43,7 +43,8 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
         String lasContent, String sourceStatement, List<String> indexesName) {
 
         Pattern alterTableOnly = Pattern.compile(
-            "ALTER TABLE ONLY\\s+public\\.(?!\\w+_x_\\d+)\\w+\\s+ADD CONSTRAINT\\s+.*?PRIMARY KEY\\s*\\(.*?\\);\n");
+            "ALTER TABLE ONLY\\s+public\\.(?!\\w+_x_\\d+)\\w+\\s+" +
+                    "ADD CONSTRAINT\\s+.*?PRIMARY KEY\\s*\\(.*?\\);\n");
 
         Matcher alterTableOnlyMatcher = alterTableOnly.matcher(sourceStatement);
 
@@ -125,9 +126,6 @@ public class PostGreSQLSchemeConverter extends BaseSchemeConverter {
                 Print.info("Applying to %s".formatted(tableName));
 
                 String copyStatement = copyStatementMatcher.group(2);
-
-                Print.replacement(
-                    copyStatement, copyStatement.toLowerCase(), copyStatementPattern);
 
                 statement = statement.replace(
                     copyStatement, copyStatement.toLowerCase());

@@ -5,8 +5,20 @@ import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
 import com.upgrade.tools.util.SchemeConverterUtil;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,19 +38,25 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
         return content;
     }
 
-    protected List<String> postProcess(List<String> contents, String sourceContent, List<String> indexesName) {
+    protected List<String> postProcess(
+        List<String> contents, String sourceContent, List<String> indexesName) {
 
         return contents;
     }
 
     @Override
     public void converter(
-            String path, String sourceName, String targetName, String newName, List<String> indexesName)
+            String path, String sourceName, String targetName, String newName,
+            List<String> indexesName)
         throws ConverterException {
 
         try {
-            Map<String, List<String>> contentsMap =
-                _readFiles(path, sourceName, targetName);
+            Print.info(
+                "Starting scheme converter to %s database".formatted(
+                    getDatabaseType()));
+
+            Map<String, List<String>> contentsMap = _readFiles(
+                path, sourceName, targetName);
 
             String sourceContent = contentsMap.get("source.content").getFirst();
 
@@ -90,19 +108,17 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
                 if (tableNameSource.equalsIgnoreCase(tableNameTarget)) {
                     Print.info(String.format("Converting %s table", tableNameSource));
 
-                    targetContent =
-                        targetContent.replaceAll(tableNameTarget, tableNameSource);
+                    targetContent = targetContent.replaceAll(
+                        tableNameTarget, tableNameSource);
 
                     String columnsSource = matcherSource.group(2);
                     String columnsTarget = matcherTarget.group(2);
 
-                    String convertedColumns =
-                        _getConvertedColumns(columnsSource, columnsTarget);
+                    String convertedColumns = _getConvertedColumns(
+                        columnsSource, columnsTarget);
 
                     targetContent = targetContent.replace(
                         columnsTarget, beforeProcess(convertedColumns, sourceContent));
-
-                    Print.replacement(columnsTarget, convertedColumns, pattern);
                 }
             }
         }
@@ -224,7 +240,7 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
     }
 
     private Map<String, List<String>> _readFiles(
-        String path, String sourceName, String targetName) throws RuntimeException {
+        String path, String sourceName, String targetName) throws Exception {
 
         try {
             if (!sourceName.endsWith(_VALID_EXTENSION) || !targetName.endsWith(_VALID_EXTENSION)) {
@@ -236,13 +252,13 @@ public abstract class BaseSchemeConverter implements SchemeConverter {
             InputStream targetInputStream = new FileInputStream(path + targetName);
 
             if (sourceInputStream.read() <= 0 || targetInputStream.read() <= 0) {
-                throw new RuntimeException("File content cannot be empty");
+                throw new Exception("File content cannot be empty");
             }
 
             return _readContentMap(sourceInputStream, targetInputStream);
         }
         catch (Exception exception) {
-            throw new RuntimeException(exception);
+            throw new Exception(exception);
         }
 
     }
