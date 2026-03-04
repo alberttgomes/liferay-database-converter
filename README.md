@@ -141,3 +141,42 @@ If no errors appear, the schema fix is valid.
 ### Notes
 - Processes structural DDL only
 - Does not modify data
+
+## 🔄 Full Workflow
+Below is the complete logical flow of the tool:
+
+```
+                CLEAN ENVIRONMENT (Bundle Version)
+                           │
+                           │  pg_dump --schema-only
+                           ▼
+                 SOURCE SCHEMA (bundle_schema.sql)
+                           │
+                           │
+                           │
+CUSTOMER ENVIRONMENT ──────┐
+(Pentaho processed DB)     │
+                           │  pg_dump --schema-only
+                           ▼
+               TARGET SCHEMA (customer_schema.sql)
+                           │
+                           │
+                           │  Run Tool
+                           ▼
+         liferay-database-migrate-tools.jar
+                           │
+                           ▼
+              GENERATED FIXED SCHEMA
+                   (fixed_schema.sql)
+                           │
+                           │
+                           │  pg_dump --data-only
+                           ▼
+                CUSTOMER DATA (02-data.sql)
+                           │
+                           ▼
+          Import Into Fresh Database (Docker)
+                           │
+                           ▼
+                    VALIDATION RESULT
+```
