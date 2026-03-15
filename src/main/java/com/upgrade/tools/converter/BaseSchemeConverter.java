@@ -235,40 +235,31 @@ public abstract class BaseSchemeConverter
 
         Set<String> newColumns = new HashSet<>(sourceColumnsSet);
 
-        Set<String> normalizedSourceColumns = TransformUtil.transformToSet(
-            sourceColumnsSet,
-            (column) -> {
-                String columnName = _extractColumnName(column);
+        newColumns.addAll(
+            TransformUtil.transformToSet(
+                targetColumnsSet,
+                (column) -> {
+                    Matcher matcher = _COLUMN_NAME_PATTERN.matcher(
+                        column);
 
-                if (columnName != null) {
-                    return  columnName.toLowerCase();
-                }
+                    if (!matcher.find()) {
+                        return null;
+                    }
 
-                return null;
-        });
+                    String columnTargetNormalized =
+                        matcher.group(1)
+                            .replace("\"", "")
+                            .replace("`", "")
+                            .toLowerCase();
 
-        for (String column : targetColumnsSet) {
-            Matcher matcher = _COLUMN_NAME_PATTERN.matcher(
-                column);
+                    if (!sourceColumnsSet.contains(
+                            columnTargetNormalized)) {
 
-            if (!matcher.find()) {
-                continue;
-            }
+                        return null;
+                    }
 
-            String columnTargetNormalized =
-                matcher.group(1)
-                    .replace("\"", "")
-                    .replace("`", "")
-                    .toLowerCase();
-
-            if (normalizedSourceColumns.contains(
-                columnTargetNormalized)) {
-
-                continue;
-            }
-
-            newColumns.add(column);
-        }
+                    return column;
+                }));
 
         return newColumns;
     }
