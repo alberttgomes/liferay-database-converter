@@ -11,8 +11,9 @@ import com.upgrade.tools.exception.ConverterException;
  */
 public class SchemeConverterInitialize {
 
-    public static SchemeConverter getConverterType
-        (String databaseType) throws ConverterException {
+    public static SchemeConverter getConverterType(
+            String databaseType)
+        throws ConverterException {
 
         try {
             if (databaseType.isBlank()) {
