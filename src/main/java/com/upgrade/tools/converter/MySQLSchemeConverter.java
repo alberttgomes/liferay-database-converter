@@ -44,7 +44,9 @@ public class MySQLSchemeConverter extends BaseSchemeConverter {
         return result;
     }
 
-    private String _processReplacement(String statement, Pattern pattern, String sourceStatement) {
+    private String _processReplacement(
+        String statement, Pattern pattern, String sourceStatement) {
+
         Matcher matcher = pattern.matcher(statement);
 
         while (matcher.find()) {
@@ -52,11 +54,15 @@ public class MySQLSchemeConverter extends BaseSchemeConverter {
                 sourceStatement);
 
             while (tableStatementMatcher.find()) {
-                String tableName = tableStatementMatcher.group(1).replace(
+                String tableNameNormalized =
+                    tableStatementMatcher.group(1).replace(
                         "`", "");
 
-                if (tableName.equalsIgnoreCase(matcher.group(1))) {
-                    statement = statement.replace(matcher.group(1), tableName);
+                if (tableNameNormalized.equalsIgnoreCase(
+                    matcher.group(1))) {
+
+                    statement = statement.replace(
+                        matcher.group(1), tableNameNormalized);
                 }
             }
         }
@@ -100,8 +106,9 @@ public class MySQLSchemeConverter extends BaseSchemeConverter {
             sb.append("\n");
             sb.append("  ");
 
-            String keys = keysName.isEmpty() ? matcher.group() : _scapeKeys(
-                matcher.group(), keysName);
+            String keys = (keysName.isEmpty()) ?
+                matcher.group() :
+                _scapeKeys(matcher.group(), keysName);
 
             sb.append(keys);
         }
@@ -139,6 +146,5 @@ public class MySQLSchemeConverter extends BaseSchemeConverter {
 
     private final Pattern _TABLE_NAME_PATTERN = Pattern.compile(
         "CREATE\\s+TABLE\\s+(`[^`]+`)\\s*\\(([\\s\\S]*?\\)\\s*)(?=ENGINE|;)");
-
 
 }
