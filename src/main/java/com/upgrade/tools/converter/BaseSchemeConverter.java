@@ -4,6 +4,7 @@ import com.upgrade.tools.exception.ConverterException;
 import com.upgrade.tools.util.Print;
 import com.upgrade.tools.util.ResultsThreadLocal;
 import com.upgrade.tools.util.SchemeConverterUtil;
+import com.upgrade.tools.util.TransformUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,7 +18,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -126,9 +126,8 @@ public abstract class BaseSchemeConverter
                     matcherTarget.appendReplacement(
                         sb,
                         Matcher.quoteReplacement(
-                            matcherTarget.group(0)
-                                .replace(columnsTarget, convertedColumns)
-                                .replace(tableNameTarget, tableNameSource)
+                            matcherTarget.group(0).replace(
+                                columnsTarget, convertedColumns)
                         ));
 
                     Print.replacement(
@@ -184,9 +183,9 @@ public abstract class BaseSchemeConverter
                         index++;
 
                         matcherTarget.appendReplacement(
-                            sb, Matcher.quoteReplacement(
-                                _concat(
-                                    column, index, newColumns.size())));
+                            sb,
+                            Matcher.quoteReplacement(
+                                _concat(column, index, newColumns.size())));
                     }
                 }
             }
@@ -226,35 +225,50 @@ public abstract class BaseSchemeConverter
         return columns;
     }
 
-    private Set<String> _newColumnsResults(String sourceColumns, String targetColumns) {
-        Set<String> sourceColumnsSet = _getColumnsSet(sourceColumns);
-        Set<String> targetColumnsSet = _getColumnsSet(targetColumns);
+    private Set<String> _newColumnsResults(
+        String sourceColumns, String targetColumns) {
+
+        Set<String> sourceColumnsSet = _getColumnsSet(
+            sourceColumns);
+        Set<String> targetColumnsSet = _getColumnsSet(
+            targetColumns);
 
         Set<String> newColumns = new HashSet<>(sourceColumnsSet);
 
-        targetColumnsSet.forEach(
+        Set<String> normalizedSourceColumns = TransformUtil.transformToSet(
+            sourceColumnsSet,
             (column) -> {
-                Matcher matcher = _COLUMN_NAME_PATTERN.matcher(column);
+                String columnName = _extractColumnName(column);
 
-                if (matcher.find()) {
-                    String columnTargetNormalized = matcher.group(1)
-                        .replaceAll("\"", "")
-                        .replaceAll("`", "")
-                        .toLowerCase();
-
-                    boolean exists = sourceColumnsSet.stream()
-                        .map(this::_extractColumnName)
-                        .filter(Objects::nonNull)
-                        .anyMatch(
-                            name -> name.equalsIgnoreCase(
-                                columnTargetNormalized));
-
-                    if (exists) return;
-
-                    newColumns.add(column);
+                if (columnName != null) {
+                    return  columnName.toLowerCase();
                 }
+
+                return null;
+        });
+
+        for (String column : targetColumnsSet) {
+            Matcher matcher = _COLUMN_NAME_PATTERN.matcher(
+                column);
+
+            if (!matcher.find()) {
+                continue;
             }
-        );
+
+            String columnTargetNormalized =
+                matcher.group(1)
+                    .replace("\"", "")
+                    .replace("`", "")
+                    .toLowerCase();
+
+            if (normalizedSourceColumns.contains(
+                columnTargetNormalized)) {
+
+                continue;
+            }
+
+            newColumns.add(column);
+        }
 
         return newColumns;
     }
