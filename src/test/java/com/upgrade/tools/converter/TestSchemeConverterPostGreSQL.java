@@ -1,6 +1,5 @@
 package com.upgrade.tools.converter;
 
-import com.upgrade.tools.exception.ConverterException;
 import com.upgrade.tools.executor.SchemeConverterExecutor;
 
 import java.io.File;
@@ -18,74 +17,91 @@ import org.junit.jupiter.api.Test;
 public class TestSchemeConverterPostGreSQL {
 
     @Test
-    public void testSchemeConverterColumnDefinitions() throws Exception {
-        String path = _basePath + "column-definitions/";
+    public void testWithCustomColumn() throws Exception {
+        String path = _basePath + "column-definitions/postgresql/";
+
+        String processed = "custom_column_test_processed.sql";
 
         SchemeConverterExecutor.executor(
             new String[]{
                 "-d", "postgresql", "-p", path,
-                "-sf", "source.sql", "-tf", "target.sql",
-                "-nf", "new-create-table-statement.sql"
+                "-sf", "custom_column_test_source.sql",
+                "-tf", "custom_column_test_target.sql",
+                "-nf", processed
             });
 
-        String newConvertedContent = _readContent(
-            path, "new-create-table-statement.sql");
-
-        String targetContent = _readContent(
-            path, "excepted_create_table_statement.sql");
-
         Assertions.assertEquals(
-            targetContent, newConvertedContent, "failed");
+            _readContent(path, processed),
+            _readContent(path, "custom_column_test_expected.sql"));
     }
 
     @Test
-    public void testSchemeConverterParameters() throws Exception {
-        String path = _basePath + "parameters/";
+    public void testWithReservedWordsColumn() throws Exception {
+        String path = _basePath + "column-definitions/postgresql/";
 
-        // valid files extensions
+        String processed = "reserved_words_column_test_processed.sql";
 
-        Assertions.assertThrows(
-            ConverterException.class,
-            () -> SchemeConverterExecutor.executor(
-                    new String[]{
-                        "-d", "postgresql", "-p", path,
-                        "-sf", "source.bak", "-tf", "target.bak",
-                        "-nf", "new-create-table-statement.sql"
-                    })
-        );
+        SchemeConverterExecutor.executor(
+            new String[]{
+                "-d", "postgresql", "-p", path,
+                "-sf", "reserved_words_column_test_source.sql",
+                "-tf", "reserved_words_column_test_target.sql",
+                "-nf", processed
+            });
 
-        // supported database parameter
+        Assertions.assertEquals(
+            _readContent(path, processed),
+            _readContent(
+                path, "reserved_words_column_test_expected.sql"));
+    }
+    @Test
+    public void testWithSortColumns() throws Exception {
+        String path = _basePath + "column-definitions/postgresql/";
 
-        Assertions.assertThrows(
-            ConverterException.class,
-            () -> SchemeConverterExecutor.executor(
-                    new String[]{
-                        "-d", "mariadb", "-p", path,
-                        "-sf", "source.sql", "-tf", "target.sql",
-                        "-nf", "new-create-table-statement.sql"
-                    })
-        );
+        String processed = "sort_column_test_processed.sql";
 
-        // invalid path directory
+        SchemeConverterExecutor.executor(
+            new String[]{
+                "-d", "postgresql", "-p", path,
+                "-sf", "sort_column_test_source.sql",
+                "-tf", "sort_column_test_target.sql",
+                "-nf", processed
+            });
 
-        Assertions.assertThrows(
-            ConverterException.class,
-            () -> SchemeConverterExecutor.executor(
-                    new String[]{
-                        "-d", "mariadb", "-p", "/path",
-                        "-sf", "source.sql", "-tf", "target.sql",
-                        "-nf", "new-create-table-statement.sql"
-                    })
-        );
+        Assertions.assertEquals(
+            _readContent(path, processed),
+            _readContent(
+                path, "sort_column_test_expected.sql"));
     }
 
     @AfterAll
     public static void cleanUp() {
-        String path = _basePath + "column-definitions/";
+        String path = _basePath + "column-definitions/postgresql/";
 
-        File file = new File(path + "new-create-table-statement.sql");
+        File customColumnFile = new File(
+            path + "custom_column_test_processed.sql");
 
-        System.out.printf("Clean up %s%n", file.delete());
+        if (customColumnFile.exists()) {
+            System.out.printf(
+                "Removing %s%n temp file", customColumnFile.delete());
+        }
+
+        File reservedWordsProcessedFile = new File(
+            path + "reserved_words_column_test_processed.sql");
+
+        if (reservedWordsProcessedFile.exists()) {
+            System.out.printf(
+                "Removing %s%n temp file",
+                reservedWordsProcessedFile.delete());
+        }
+
+        File sortColumnFile = new File(
+            path + "sort_column_test_processed.sql");
+
+        if (sortColumnFile.exists()) {
+            System.out.printf(
+                "Removing %s%n temp file", sortColumnFile.delete());
+        }
     }
 
     private String _readContent(String path, String fileName) throws Exception {
